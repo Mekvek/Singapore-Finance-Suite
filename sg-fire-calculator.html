@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SG FIRE — Financial Independence Calculator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Syne', 'sans-serif'],
+          body: ['DM Sans', 'sans-serif'],
+        },
+        colors: {
+          fire: {
+            50: '#fff7ed',
+            100: '#ffedd5',
+            400: '#fb923c',
+            500: '#f97316',
+            600: '#ea580c',
+          },
+          jade: {
+            400: '#34d399',
+            500: '#10b981',
+            600: '#059669',
+          },
+          slate: {
+            850: '#0f172a',
+            900: '#0c1322',
+            950: '#070d1a',
+          }
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  /* ===========================
+     CSS VARIABLES & BASE STYLES
+     =========================== */
+  :root {
+    --bg-primary: #f8f7f4;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-sidebar: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --accent-fire: #f97316;
+    --accent-jade: #10b981;
+    --accent-blue: #3b82f6;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.05);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  .dark {
+    --bg-primary: #070d1a;
+    --bg-secondary: #0c1322;
+    --bg-card: #111827;
+    --bg-sidebar: #0c1322;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --border: #1e293b;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background 0.3s, color 0.3s;
+    min-height: 100vh;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .app-layout {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===========================
+     SIDEBAR
+     =========================== */
+  .sidebar {
+    width: 340px;
+    min-width: 320px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    height: 100vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+    box-shadow: var(--shadow-md);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg-sidebar);
+    z-index: 10;
+    transition: background 0.3s;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-flame {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #f97316, #ef4444);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    animation: flicker 3s ease-in-out infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% { box-shadow: 0 0 8px rgba(249,115,22,0.4); }
+    50% { box-shadow: 0 0 20px rgba(249,115,22,0.7), 0 0 40px rgba(249,115,22,0.3); }
+  }
+
+  .sidebar-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-fire);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ===========================
+     FORM ELEMENTS
+     =========================== */
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .input-prefix {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 8px 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    transition: background 0.3s;
+  }
+
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    transition: all 0.2s;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus, select:focus {
+    border-color: var(--accent-fire);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+    background: var(--bg-card);
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 4px;
+    border-radius: 4px;
+    appearance: none;
+    background: var(--border);
+    cursor: pointer;
+    margin-top: 6px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent-fire);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.2);
+    transition: box-shadow 0.2s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 6px rgba(249,115,22,0.25);
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .slider-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-fire);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* Toggle switch */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+  }
+
+  .toggle-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .toggle input:checked + .toggle-slider { background: var(--accent-jade); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  /* ===========================
+     MAIN CONTENT
+     =========================== */
+  .main-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    min-width: 0;
+  }
+
+  .main-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .main-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  .main-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  /* ===========================
+     METRIC CARDS
+     =========================== */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--card-accent, var(--accent-fire));
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .metric-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .metric-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ===========================
+     FIRE PROGRESS BAR
+     =========================== */
+  .progress-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .progress-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .progress-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent-fire);
+  }
+
+  .progress-bar-track {
+    height: 12px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f97316, #ef4444);
+    border-radius: 12px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    to { left: 100%; }
+  }
+
+  .progress-milestones {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  .milestone {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* ===========================
+     CHART CARDS
+     =========================== */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .chart-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  canvas { max-width: 100%; }
+
+  /* ===========================
+     ASSUMPTIONS / WARNINGS
+     =========================== */
+  .info-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .warning-box {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+
+  .warning-box.yellow {
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.3);
+    color: #d97706;
+  }
+
+  .warning-box.green {
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: #059669;
+  }
+
+  .warning-box.red {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #dc2626;
+  }
+
+  /* ===========================
+     BREAKDOWN TABLE
+     =========================== */
+  .breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .breakdown-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .breakdown-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .breakdown-table tr:last-child td { border-bottom: none; }
+
+  .breakdown-table tr:hover td {
+    background: rgba(249,115,22,0.03);
+    color: var(--text-primary);
+  }
+
+  /* ===========================
+     DARK MODE / UTILITY BUTTONS
+     =========================== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+
+  .btn:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--accent-fire);
+  }
+
+  .btn-fire {
+    background: linear-gradient(135deg, #f97316, #ef4444);
+    color: white;
+    border: none;
+  }
+
+  .btn-fire:hover {
+    opacity: 0.9;
+    color: white;
+    box-shadow: 0 4px 12px rgba(249,115,22,0.4);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* ===========================
+     CPF RATE BADGE
+     =========================== */
+  .rate-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(16,185,129,0.12);
+    color: var(--accent-jade);
+    margin-left: 6px;
+  }
+
+  /* ===========================
+     RETIREMENT AGE INDICATOR
+     =========================== */
+  .age-timeline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: rgba(249,115,22,0.05);
+    border: 1px solid rgba(249,115,22,0.2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+
+  .age-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .age-dot.current { background: var(--accent-blue); }
+  .age-dot.retire { background: var(--accent-fire); }
+  .age-dot.cpf { background: var(--accent-jade); }
+
+  .age-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .age-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-fire));
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+
+  /* ===========================
+     RESPONSIVE
+     =========================== */
+  @media (max-width: 1024px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .app-layout { flex-direction: column; }
+    .sidebar {
+      width: 100%;
+      min-width: unset;
+      height: auto;
+      position: relative;
+    }
+    .main-content { padding: 20px; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===========================
+     ANIMATIONS
+     =========================== */
+  .metric-value {
+    transition: all 0.4s;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Collapsible sections */
+  .section-toggle {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  .section-toggle:hover { background: rgba(249,115,22,0.04); }
+
+  .section-toggle-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-caret {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+
+  .section-caret.open { transform: rotate(180deg); }
+
+  .collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .collapsible-content.closed { max-height: 0 !important; }
+
+  /* ===========================
+     WEALTH BREAKDOWN SECTION
+     =========================== */
+  .wealth-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .wealth-item {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    transition: background 0.3s;
+  }
+
+  .wealth-item-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .wealth-item-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .wealth-item-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-layout" id="app">
+
+  <!-- =================== SIDEBAR =================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-flame">🔥</div>
+        <div>
+          <div>SG FIRE</div>
+          <div style="font-family:'DM Sans';font-size:11px;font-weight:400;color:var(--text-muted);letter-spacing:0.3px;">Financial Independence Calculator</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Details -->
+    <div class="section-toggle" onclick="toggleSection('personal')">
+      <span class="section-toggle-label">👤 Personal Details</span>
+      <span class="section-caret open" id="caret-personal">▼</span>
+    </div>
+    <div class="collapsible-content" id="section-personal" style="max-height:600px">
+      <div class="sidebar-section">
+        <div class="form-group">
+          <label class="form-label">Current Age</label>
+          <div class="input-row">
+            <input type="number" id="currentAge" value="30" min="18" max="80" oninput="syncAndCalc('currentAge','rangeAge')">
+          </div>
+          <input type="range" id="rangeAge" min="18" max="80" value="30" oninput="syncAndCalc('rangeAge','currentAge')">
+          <div class="slider-row"><span style="font-size:11px;color:var(--text-muted)">18</span><span style="flex:1"></span><span style="font-size:11px;color:var(--text-muted)">80</span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Desired Retirement Age</label>
+          <input type="number" id="retireAge" value="55" min="30" max="75" oninput="syncAndCalc('retireAge','rangeRetireAge')">
+          <input type="range" id="rangeRetireAge" min="30" max="75" value="55" oninput="syncAndCalc('rangeRetireAge','retireAge')">
+          <div class="slider-row"><span style="font-size:11px;color:var(--text-muted)">30</span><span style="flex:1"></span><span style="font-size:11px;color:var(--text-muted)">75</span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monthly Gross Salary (SGD)</label>
+          <div class="input-row">
+            <span class="input-prefix">S$</span>
+            <input type="number" id="monthlySalary" value="8000" min="0" oninput="calculate()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monthly Expenses (SGD)</label>
+          <div class="input-row">
+            <span class="input-prefix">S$</span>
+            <input type="number" id="monthlyExpenses" value="3500" min="0" oninput="calculate()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assets -->
+    <div class="section-toggle" onclick="toggleSection('assets')">
+      <span class="section-toggle-label">💰 Current Assets</span>
+      <span class="section-caret open" id="caret-assets">▼</span>
+    </div>
+    <div class="collapsible-content" id="section-assets" style="max-height:600px">
+      <div class="sidebar-section">
+        <div class="form-group">
+          <label class="form-label">Cash Savings (SGD)</label>
+          <div class="input-row"><span class="input-prefix">S$</span>
+          <input type="number" id="cashSavings" value="50000" min="0" oninput="calculate()"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Investment Portfolio (SGD)</label>
+          <div class="input-row"><span class="input-prefix">S$</span>
+          <input type="number" id="investmentPortfolio" value="80000" min="0" oninput="calculate()"></div>
+        </div>
+
+        <div class="section-label" style="margin-top:8px">SSB</div>
+        <div class="form-group">
+          <label class="form-label">SSB Principal (SGD)</label>
+          <div class="input-row"><span class="input-prefix">S$</span>
+          <input type="number" id="ssbPrincipal" value="20000" min="0" oninput="calculate()"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SSB Interest Rate (%)</label>
+          <div class="input-row">
+          <input type="number" id="ssbRate" value="3.0" min="0" max="10" step="0.1" oninput="calculate()">
+          <span class="input-prefix">%</span></div>
+        </div>
+
+        <div class="section-label" style="margin-top:8px">SGX Stocks</div>
+        <div class="form-group">
+          <label class="form-label">SGX Portfolio Value (SGD)</label>
+          <div class="input-row"><span class="input-prefix">S$</span>
+          <input type="number" id="sgxValue" value="30000" min="0" oninput="calculate()"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expected Return (%)</label>
+          <div class="input-row">
+          <input type="number" id="sgxReturn" value="7" min="0" max="30" step="0.5" oninput="calculate()">
+          <span class="input-prefix">%</span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dividend Yield (%)</label>
+          <div class="input-row">
+          <input type="number" id="sgxDividend" value="4" min="0" max="15" step="0.1" oninput="calculate()">
+          <span class="input-prefix">%</span></div>
+        </div>
+
+        <div class="section-label" style="margin-top:8px">US ETFs</div>
+        <div class="form-group">
+          <label class="form-label">Current Value (SGD)</label>
+          <div class="input-row"><span class="input-prefix">S$</span>
+          <input type="number" id="etfValue" value="50000" min="0" oninput="calculate()"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Annual DCA Amount (SGD)</label>
+          <div class="input-row"><span class="input-prefix">S$</span>
+          <input type="number" id="etfDCA" value="12000" min="0" oninput="calculate()"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Annual Return Rate (%)</label>
+          <div class="input-row">
+          <input type="number" id="etfReturn" value="8" min="0" max="30" step="0.5" oninput="calculate()">
+          <span class="input-prefix">%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CPF -->
+    <div class="section-toggle" onclick="toggleSection('cpf')">
+      <span class="section-toggle-label">🏛️ CPF Balances</span>
+      <span class="section-caret open" id="caret-cpf">▼</span>
+    </div>
+    <div class="collapsible-content" id="section-cpf" style="max-height:600px">
+      <div class="sidebar-section">
+        <div class="toggle-row">
+          <span class="toggle-label">Include CPF in FIRE</span>
+          <label class="toggle"><input type="checkbox" id="includeCPF" checked onchange="calculate()"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="cpfFields">
+          <div class="form-group">
+            <label class="form-label">OA Balance <span class="rate-badge">2.5% p.a.</span></label>
+            <div class="input-row"><span class="input-prefix">S$</span>
+            <input type="number" id="cpfOA" value="60000" min="0" oninput="calculate()"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">SA Balance <span class="rate-badge">4.0% p.a.</span></label>
+            <div class="input-row"><span class="input-prefix">S$</span>
+            <input type="number" id="cpfSA" value="40000" min="0" oninput="calculate()"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">MA Balance <span class="rate-badge">4.0% p.a.</span></label>
+            <div class="input-row"><span class="input-prefix">S$</span>
+            <input type="number" id="cpfMA" value="25000" min="0" oninput="calculate()"></div>
+          </div>
+          <div style="padding:10px 0;font-size:11px;color:var(--text-muted);line-height:1.6;">
+            CPF withdrawable from <strong style="color:var(--text-secondary)">age 55</strong> (SA+OA up to FRS). Full CPF LIFE payouts from <strong style="color:var(--text-secondary)">age 65</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assumptions -->
+    <div class="section-toggle" onclick="toggleSection('assumptions')">
+      <span class="section-toggle-label">⚙️ Assumptions</span>
+      <span class="section-caret open" id="caret-assumptions">▼</span>
+    </div>
+    <div class="collapsible-content" id="section-assumptions" style="max-height:600px">
+      <div class="sidebar-section">
+        <div class="form-group">
+          <label class="form-label">Inflation Rate (%)</label>
+          <div class="slider-row">
+            <input type="range" id="rangeInflation" min="0" max="8" step="0.1" value="2.5" oninput="syncAndCalc('rangeInflation','inflation')">
+            <span class="slider-value" id="inflationDisplay">2.5%</span>
+          </div>
+          <input type="number" id="inflation" value="2.5" min="0" max="8" step="0.1" oninput="syncAndCalc('inflation','rangeInflation')">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Safe Withdrawal Rate (%)</label>
+          <div class="slider-row">
+            <input type="range" id="rangeSWR" min="2" max="6" step="0.1" value="4" oninput="syncAndCalc('rangeSWR','swr')">
+            <span class="slider-value" id="swrDisplay">4.0%</span>
+          </div>
+          <input type="number" id="swr" value="4" min="2" max="6" step="0.1" oninput="syncAndCalc('swr','rangeSWR')">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Investment Return (Cash, %)</label>
+          <div class="input-row">
+          <input type="number" id="investReturn" value="6" min="0" max="20" step="0.5" oninput="calculate()">
+          <span class="input-prefix">%</span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Salary Growth Rate (%/yr)</label>
+          <div class="input-row">
+          <input type="number" id="salaryGrowth" value="3" min="0" max="15" step="0.5" oninput="calculate()">
+          <span class="input-prefix">%</span></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Adjust for Inflation</span>
+          <label class="toggle"><input type="checkbox" id="adjustInflation" checked onchange="calculate()"><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="sidebar-section" style="border-bottom:none;padding-top:16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-fire" onclick="saveToLocalStorage()">💾 Save</button>
+        <button class="btn" onclick="loadFromLocalStorage()">📂 Load</button>
+        <button class="btn" onclick="resetDefaults()">↺ Reset</button>
+        <button class="btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 Dark</button>
+      </div>
+      <div style="margin-top:12px;font-size:10px;color:var(--text-muted);line-height:1.6;">
+        All calculations are estimates. Not financial advice. CPF rates as of 2024. Consult a licensed financial advisor.
+      </div>
+    </div>
+  </aside>
+
+  <!-- =================== MAIN CONTENT =================== -->
+  <main class="main-content">
+
+    <div class="main-header">
+      <div>
+        <div class="main-title">Your FIRE Dashboard</div>
+        <div class="main-subtitle" id="dashSubtitle">Calculating your path to financial independence…</div>
+      </div>
+      <div class="header-actions">
+        <div id="fireStatusBadge" style="padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;"></div>
+      </div>
+    </div>
+
+    <!-- Warnings -->
+    <div id="warningArea" style="margin-bottom:20px;"></div>
+
+    <!-- Metric Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card" style="--card-accent: #f97316;">
+        <div class="metric-icon" style="background:rgba(249,115,22,0.1);">🎯</div>
+        <div class="metric-label">FIRE Number</div>
+        <div class="metric-value" id="metFireNumber">S$—</div>
+        <div class="metric-sub" id="metFireSub">At <span id="metSWR">4</span>% withdrawal rate</div>
+      </div>
+      <div class="metric-card" style="--card-accent: #3b82f6;">
+        <div class="metric-icon" style="background:rgba(59,130,246,0.1);">⏱️</div>
+        <div class="metric-label">Years to FIRE</div>
+        <div class="metric-value" id="metYearsLeft">—</div>
+        <div class="metric-sub" id="metFireDate">Target age: <span id="metRetireAge">55</span></div>
+      </div>
+      <div class="metric-card" style="--card-accent: #10b981;">
+        <div class="metric-icon" style="background:rgba(16,185,129,0.1);">💸</div>
+        <div class="metric-label">Monthly Passive Income</div>
+        <div class="metric-value" id="metPassiveIncome">S$—</div>
+        <div class="metric-sub">At retirement (inflation-adj)</div>
+      </div>
+      <div class="metric-card" style="--card-accent: #8b5cf6;">
+        <div class="metric-icon" style="background:rgba(139,92,246,0.1);">📊</div>
+        <div class="metric-label">Net Worth Today</div>
+        <div class="metric-value" id="metNetWorth">S$—</div>
+        <div class="metric-sub" id="metNetWorthSub">Cash + Investments + CPF</div>
+      </div>
+    </div>
+
+    <!-- FIRE Progress -->
+    <div class="progress-section">
+      <div class="progress-header">
+        <div>
+          <div class="progress-title">FIRE Progress</div>
+          <div style="font-size:12px;color:var(--text-muted)">Current net worth vs FIRE number</div>
+        </div>
+        <div class="progress-pct" id="progressPct">0%</div>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="progress-milestones">
+        <div class="milestone">0%<br>Start</div>
+        <div class="milestone">25%<br>Crawl</div>
+        <div class="milestone">50%<br>Half-way</div>
+        <div class="milestone">75%<br>Almost</div>
+        <div class="milestone">100%<br>FIRE! 🔥</div>
+      </div>
+    </div>
+
+    <!-- Age Timeline -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow-sm);">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">Age Timeline</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:5px;"><span class="age-dot current"></span><span style="font-size:11px;color:var(--text-muted)">Now (<span id="tlCurrent">30</span>)</span></div>
+        <div class="age-line" style="flex:1;min-width:60px;"><div class="age-fill" id="tlFill" style="width:30%"></div></div>
+        <div style="display:flex;align-items:center;gap:5px;"><span class="age-dot retire"></span><span style="font-size:11px;color:var(--text-muted)">FIRE (<span id="tlRetire">55</span>)</span></div>
+        <div class="age-line" style="width:40px;background:rgba(16,185,129,0.3);"></div>
+        <div style="display:flex;align-items:center;gap:5px;"><span class="age-dot cpf"></span><span style="font-size:11px;color:var(--text-muted)">CPF (65)</span></div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Net Worth Projection</div>
+        <div class="chart-subtitle">Total portfolio growth over time (S$ nominal)</div>
+        <canvas id="netWorthChart" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Portfolio Breakdown</div>
+        <div class="chart-subtitle">At retirement age</div>
+        <canvas id="breakdownChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Wealth Breakdown at Retirement -->
+    <div class="info-section">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">Projected Wealth at Retirement</div>
+      <div class="wealth-breakdown" id="wealthBreakdown">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- Yearly Projection Table -->
+    <div class="info-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text-primary);">Year-by-Year Projection</div>
+        <span style="font-size:11px;color:var(--text-muted)">Key milestones shown</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="breakdown-table" id="projTable">
+          <thead>
+            <tr>
+              <th>Age</th>
+              <th>Year</th>
+              <th>Net Worth</th>
+              <th>CPF Total</th>
+              <th>Cash+Invest</th>
+              <th>Annual Savings</th>
+              <th>FIRE %</th>
+            </tr>
+          </thead>
+          <tbody id="projTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CPF Detail Section -->
+    <div class="info-section">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:12px;">CPF Assumptions & Rules</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+        <div style="padding:14px;background:var(--bg-primary);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;color:var(--accent-jade);margin-bottom:8px;letter-spacing:0.8px;">CONTRIBUTION RATES (Employee)</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
+            Age ≤ 35: <strong>20%</strong><br>
+            Age 36–45: <strong>19%</strong><br>
+            Age 46–50: <strong>18%</strong><br>
+            Age 51–55: <strong>15%</strong><br>
+            Age 56–60: <strong>11.5%</strong><br>
+            Age 61–65: <strong>8.5%</strong>
+          </div>
+        </div>
+        <div style="padding:14px;background:var(--bg-primary);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;color:var(--accent-jade);margin-bottom:8px;letter-spacing:0.8px;">EMPLOYER RATES</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
+            Age ≤ 35: <strong>17%</strong><br>
+            Age 36–45: <strong>17%</strong><br>
+            Age 46–50: <strong>17%</strong><br>
+            Age 51–55: <strong>14.5%</strong><br>
+            Age 56–60: <strong>11%</strong><br>
+            Age 61–65: <strong>8.5%</strong>
+          </div>
+        </div>
+        <div style="padding:14px;background:var(--bg-primary);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;color:var(--accent-jade);margin-bottom:8px;letter-spacing:0.8px;">INTEREST RATES</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
+            OA: <strong>2.5% p.a.</strong><br>
+            SA: <strong>4.0% p.a.</strong><br>
+            MA: <strong>4.0% p.a.</strong><br>
+            RA: <strong>4.0% p.a.</strong><br>
+            <span style="font-size:10px;color:var(--text-muted)">Extra 1% on first $60k</span>
+          </div>
+        </div>
+        <div style="padding:14px;background:var(--bg-primary);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;color:var(--accent-jade);margin-bottom:8px;letter-spacing:0.8px;">WITHDRAWAL RULES</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:2;">
+            Age 55: Withdraw above FRS<br>
+            FRS 2024: <strong>S$205,800</strong><br>
+            Age 65: CPF LIFE payouts<br>
+            <span style="font-size:10px;color:var(--text-muted)">CPF Wage ceiling: $6,800/mo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- =================== JAVASCRIPT =================== -->
+<script>
+/*
+ * ============================================================
+ * SG FIRE CALCULATOR — Financial Logic
+ * ============================================================
+ * 
+ * ASSUMPTIONS:
+ * - CPF contribution rates based on MOM/CPF Board 2024 schedules
+ * - CPF wage ceiling: S$6,800/month (from Sep 2023)
+ * - CPF Ordinary Account interest: 2.5% p.a.
+ * - CPF Special/Medisave Account interest: 4.0% p.a.
+ * - Extra 1% interest on first S$60,000 of combined CPF balances
+ *   (up to S$20,000 from OA)
+ * - CPF Full Retirement Sum (FRS) 2024: S$205,800
+ * - CPF withdrawal age: 55 (amounts above FRS)
+ * - FIRE number = Annual Expenses / Safe Withdrawal Rate
+ * - Safe Withdrawal Rate default: 4% (Trinity Study)
+ * - All projections in nominal SGD unless inflation-adjusted is toggled
+ * - Salary income assumed to grow at salary growth rate
+ * - Monthly savings = After-tax take-home - expenses
+ * - Singapore income tax not explicitly calculated (approximate via
+ *   net salary = gross - employee CPF contributions)
+ * ============================================================
+ */
+
+// ===========================
+// CONSTANTS
+// ===========================
+
+const CPF_WAGE_CEILING = 6800; // Monthly, as of Sep 2023
+const CPF_FRS_2024 = 205800;   // Full Retirement Sum 2024
+
+// Employee CPF contribution rates by age bracket
+// Source: CPF Board 2024
+const CPF_EMPLOYEE_RATES = [
+  { maxAge: 35,  rate: 0.20 },
+  { maxAge: 45,  rate: 0.19 },
+  { maxAge: 50,  rate: 0.18 },
+  { maxAge: 55,  rate: 0.15 },
+  { maxAge: 60,  rate: 0.115 },
+  { maxAge: 65,  rate: 0.085 },
+  { maxAge: Infinity, rate: 0.05 },
+];
+
+// Employer CPF contribution rates by age bracket
+const CPF_EMPLOYER_RATES = [
+  { maxAge: 35,  rate: 0.17 },
+  { maxAge: 45,  rate: 0.17 },
+  { maxAge: 50,  rate: 0.17 },
+  { maxAge: 55,  rate: 0.145 },
+  { maxAge: 60,  rate: 0.11 },
+  { maxAge: 65,  rate: 0.085 },
+  { maxAge: Infinity, rate: 0.075 },
+];
+
+// Allocation of total CPF contributions to OA/SA/MA by age
+// These are simplified approximations of CPF allocation rules
+const CPF_OA_ALLOC = [
+  { maxAge: 35,  rate: 0.6217 },
+  { maxAge: 45,  rate: 0.5677 },
+  { maxAge: 50,  rate: 0.5136 },
+  { maxAge: 55,  rate: 0.4055 },
+  { maxAge: 60,  rate: 0.3872 },
+  { maxAge: 65,  rate: 0.2727 },
+  { maxAge: Infinity, rate: 0.0 },
+];
+
+const CPF_SA_ALLOC = [
+  { maxAge: 35,  rate: 0.1621 },
+  { maxAge: 45,  rate: 0.1891 },
+  { maxAge: 50,  rate: 0.2162 },
+  { maxAge: 55,  rate: 0.3108 },
+  { maxAge: 60,  rate: 0.2060 },
+  { maxAge: 65,  rate: 0.1364 },
+  { maxAge: Infinity, rate: 0.0 },
+];
+
+// MA gets the remainder of total contributions
+
+// CPF Interest Rates
+const CPF_OA_RATE  = 0.025;
+const CPF_SA_RATE  = 0.04;
+const CPF_MA_RATE  = 0.04;
+const CPF_EXTRA_RATE = 0.01; // Extra 1% on first $60k combined
+
+// ===========================
+// HELPER FUNCTIONS
+// ===========================
+
+/**
+ * Returns the CPF employee contribution rate for a given age
+ */
+function getCPFEmployeeRate(age) {
+  for (const bracket of CPF_EMPLOYEE_RATES) {
+    if (age <= bracket.maxAge) return bracket.rate;
+  }
+  return 0.05;
+}
+
+/**
+ * Returns the CPF employer contribution rate for a given age
+ */
+function getCPFEmployerRate(age) {
+  for (const bracket of CPF_EMPLOYER_RATES) {
+    if (age <= bracket.maxAge) return bracket.rate;
+  }
+  return 0.075;
+}
+
+/**
+ * Returns the OA allocation fraction of total CPF for a given age
+ */
+function getCPFOAAlloc(age) {
+  for (const bracket of CPF_OA_ALLOC) {
+    if (age <= bracket.maxAge) return bracket.rate;
+  }
+  return 0;
+}
+
+/**
+ * Returns the SA allocation fraction of total CPF for a given age
+ */
+function getCPFSAAlloc(age) {
+  for (const bracket of CPF_SA_ALLOC) {
+    if (age <= bracket.maxAge) return bracket.rate;
+  }
+  return 0;
+}
+
+/**
+ * Format number as SGD currency string
+ */
+function fmtSGD(val, compact = false) {
+  if (isNaN(val) || !isFinite(val)) return 'S$—';
+  if (compact) {
+    if (Math.abs(val) >= 1_000_000) return `S$${(val/1_000_000).toFixed(2)}M`;
+    if (Math.abs(val) >= 1_000) return `S$${(val/1_000).toFixed(0)}K`;
+    return `S$${val.toFixed(0)}`;
+  }
+  return 'S$' + Math.round(val).toLocaleString('en-SG');
+}
+
+function fmtNum(val) {
+  if (isNaN(val) || !isFinite(val)) return '—';
+  return Math.round(val).toLocaleString('en-SG');
+}
+
+/**
+ * Calculate CPF interest for a year given balances
+ * Extra 1% interest: applies to first $60k combined (cap $20k from OA)
+ */
+function calcCPFInterest(oa, sa, ma) {
+  const combined = oa + sa + ma;
+  const extraBase = Math.min(combined, 60000);
+  const extraFromOA = Math.min(oa, 20000);
+  const extraFromSA_MA = Math.min(extraBase - extraFromOA, sa + ma);
+
+  const oaInterest = oa * CPF_OA_RATE + Math.min(extraFromOA, extraBase) * CPF_EXTRA_RATE;
+  const saMaExtra = Math.max(0, extraFromSA_MA);
+  const saInterest = sa * CPF_SA_RATE + (sa / (sa + ma || 1)) * saMaExtra * CPF_EXTRA_RATE;
+  const maInterest = ma * CPF_MA_RATE + (ma / (sa + ma || 1)) * saMaExtra * CPF_EXTRA_RATE;
+
+  return { oa: oaInterest, sa: saInterest, ma: maInterest };
+}
+
+// ===========================
+// MAIN CALCULATION ENGINE
+// ===========================
+
+function getInputs() {
+  const get = (id) => parseFloat(document.getElementById(id)?.value) || 0;
+  const getB = (id) => document.getElementById(id)?.checked ?? false;
+  return {
+    currentAge:   Math.round(get('currentAge')),
+    retireAge:    Math.round(get('retireAge')),
+    salary:       get('monthlySalary'),
+    expenses:     get('monthlyExpenses'),
+    cashSavings:  get('cashSavings'),
+    investPort:   get('investmentPortfolio'),
+    ssbPrincipal: get('ssbPrincipal'),
+    ssbRate:      get('ssbRate') / 100,
+    sgxValue:     get('sgxValue'),
+    sgxReturn:    get('sgxReturn') / 100,
+    sgxDividend:  get('sgxDividend') / 100,
+    etfValue:     get('etfValue'),
+    etfDCA:       get('etfDCA'),
+    etfReturn:    get('etfReturn') / 100,
+    inflation:    get('inflation') / 100,
+    swr:          get('swr') / 100,
+    investReturn: get('investReturn') / 100,
+    salaryGrowth: get('salaryGrowth') / 100,
+    cpfOA:        get('cpfOA'),
+    cpfSA:        get('cpfSA'),
+    cpfMA:        get('cpfMA'),
+    includeCPF:   getB('includeCPF'),
+    adjustInflation: getB('adjustInflation'),
+  };
+}
+
+/**
+ * Core projection engine.
+ * Returns array of yearly snapshots from currentAge to max(retireAge+30, 80).
+ */
+function projectWealth(inp) {
+  const maxAge = Math.max(inp.retireAge + 30, 85);
+  const snapshots = [];
+
+  // State variables
+  let cash = inp.cashSavings;
+  let invest = inp.investPort;
+  let ssb = inp.ssbPrincipal;
+  let sgx = inp.sgxValue;
+  let etf = inp.etfValue;
+  let cpfOA = inp.cpfOA;
+  let cpfSA = inp.cpfSA;
+  let cpfMA = inp.cpfMA;
+  let salary = inp.salary;
+  let cpfWithdrawn = false;
+
+  for (let age = inp.currentAge; age <= maxAge; age++) {
+    const year = new Date().getFullYear() + (age - inp.currentAge);
+    const isRetired = age >= inp.retireAge;
+    const canWithdrawCPF = age >= 55;
+
+    // --- CPF contributions (only while working) ---
+    if (!isRetired && salary > 0) {
+      const cappedSalary = Math.min(salary, CPF_WAGE_CEILING);
+      const empRate = getCPFEmployeeRate(age);
+      const emplRate = getCPFEmployerRate(age);
+      const totalCPFContrib = cappedSalary * (empRate + emplRate) * 12;
+
+      const oaAlloc = getCPFOAAlloc(age);
+      const saAlloc = getCPFSAAlloc(age);
+      const maAlloc = 1 - oaAlloc - saAlloc;
+
+      cpfOA += totalCPFContrib * oaAlloc;
+      cpfSA += totalCPFContrib * saAlloc;
+      cpfMA += totalCPFContrib * Math.max(0, maAlloc);
+    }
+
+    // --- CPF interest ---
+    const cpfInt = calcCPFInterest(cpfOA, cpfSA, cpfMA);
+    cpfOA += cpfInt.oa;
+    cpfSA += cpfInt.sa;
+    cpfMA += cpfInt.ma;
+
+    // --- CPF withdrawal at 55 (one-time, above FRS) ---
+    if (canWithdrawCPF && !cpfWithdrawn) {
+      const totalCPF = cpfOA + cpfSA;
+      const withdrawable = Math.max(0, totalCPF - CPF_FRS_2024);
+      // Move withdrawable to cash/invest
+      const frac = totalCPF > 0 ? withdrawable / totalCPF : 0;
+      cpfOA -= cpfOA * frac;
+      cpfSA -= cpfSA * frac;
+      cash += withdrawable * 0.5;
+      invest += withdrawable * 0.5;
+      cpfWithdrawn = true;
+    }
+
+    // --- Cash investments (savings) ---
+    if (!isRetired) {
+      // Take-home pay = gross - employee CPF
+      const cappedSalaryM = Math.min(salary, CPF_WAGE_CEILING);
+      const empRate = getCPFEmployeeRate(age);
+      const takeHome = salary - cappedSalaryM * empRate;
+      const monthlySavings = Math.max(0, takeHome - inp.expenses);
+      const annualSavings = monthlySavings * 12;
+
+      cash += annualSavings * 0.3; // 30% to cash
+      invest += annualSavings * 0.7; // 70% to investments
+    } else {
+      // Drawdown phase: withdraw from portfolio
+      const annualExpenses = inp.expenses * 12 * Math.pow(1 + inp.inflation, age - inp.currentAge);
+      const totalLiquid = cash + invest + ssb + sgx + etf;
+      const drawdown = Math.min(annualExpenses, totalLiquid);
+      // Draw from cash first, then invest
+      const fromCash = Math.min(cash, drawdown);
+      cash -= fromCash;
+      invest -= Math.max(0, drawdown - fromCash);
+      invest = Math.max(0, invest);
+    }
+
+    // --- Growth on investment accounts ---
+    invest *= (1 + inp.investReturn);
+    ssb    *= (1 + inp.ssbRate);
+    sgx    *= (1 + inp.sgxReturn);
+    etf    *= (1 + inp.etfReturn);
+
+    // ETF DCA (only while working)
+    if (!isRetired) {
+      etf += inp.etfDCA;
+    }
+
+    // SGX dividends reinvested (or paid out — treated as reinvested here)
+    sgx += sgx * inp.sgxDividend * 0.5; // 50% reinvested
+
+    // Salary growth
+    salary *= (1 + inp.salaryGrowth);
+
+    // --- Compute snapshot ---
+    const cpfTotal = cpfOA + cpfSA + cpfMA;
+    const cashInvest = cash + invest + ssb + sgx + etf;
+    const netWorth = cashInvest + (inp.includeCPF ? cpfTotal : 0);
+
+    // Annual savings this year (approximate)
+    let annualSavingsSnapshot = 0;
+    if (!isRetired) {
+      const cappedSalaryM = Math.min(salary / (1 + inp.salaryGrowth), CPF_WAGE_CEILING);
+      const empRate = getCPFEmployeeRate(age);
+      const takeHomeM = (salary / (1 + inp.salaryGrowth)) - cappedSalaryM * empRate;
+      annualSavingsSnapshot = Math.max(0, takeHomeM - inp.expenses) * 12;
+    }
+
+    snapshots.push({
+      age, year,
+      cash: Math.max(0, cash),
+      invest: Math.max(0, invest),
+      ssb: Math.max(0, ssb),
+      sgx: Math.max(0, sgx),
+      etf: Math.max(0, etf),
+      cpfOA: Math.max(0, cpfOA),
+      cpfSA: Math.max(0, cpfSA),
+      cpfMA: Math.max(0, cpfMA),
+      cpfTotal: Math.max(0, cpfTotal),
+      cashInvest: Math.max(0, cashInvest),
+      netWorth: Math.max(0, netWorth),
+      annualSavings: annualSavingsSnapshot,
+      isRetired,
+    });
+  }
+
+  return snapshots;
+}
+
+// ===========================
+// CHART INSTANCES
+// ===========================
+let netWorthChartInst = null;
+let breakdownChartInst = null;
+
+// ===========================
+// MAIN CALCULATE FUNCTION
+// ===========================
+function calculate() {
+  const inp = getInputs();
+
+  // ---- Validation ----
+  const warnings = [];
+  if (inp.retireAge <= inp.currentAge) {
+    warnings.push({ type: 'red', msg: '⚠️ Retirement age must be greater than current age.' });
+  }
+  if (inp.salary <= 0) {
+    warnings.push({ type: 'yellow', msg: '💡 No salary entered — assuming no new contributions.' });
+  }
+  if (inp.expenses <= 0) {
+    warnings.push({ type: 'yellow', msg: '💡 Monthly expenses appear to be zero. Please enter a realistic figure.' });
+  }
+  if (inp.inflation > 5) {
+    warnings.push({ type: 'yellow', msg: '⚠️ Inflation above 5% is unusually high. Review your assumptions.' });
+  }
+  if (inp.investReturn > 15) {
+    warnings.push({ type: 'yellow', msg: '⚠️ Investment return above 15% is aggressive. Consider a more conservative estimate.' });
+  }
+  if (inp.expenses > inp.salary * 0.9) {
+    warnings.push({ type: 'yellow', msg: '💡 Expenses are close to or exceed salary. Savings rate may be very low.' });
+  }
+
+  renderWarnings(warnings);
+  if (inp.retireAge <= inp.currentAge) return;
+
+  // ---- FIRE Number ----
+  // FIRE number = (Annual expenses at retirement, inflation-adjusted) / SWR
+  const yearsToRetire = inp.retireAge - inp.currentAge;
+  const futureAnnualExpenses = inp.expenses * 12 * Math.pow(1 + inp.inflation, yearsToRetire);
+  const fireNumber = futureAnnualExpenses / inp.swr;
+  const fireNumberToday = (inp.expenses * 12) / inp.swr; // today's dollars
+
+  // ---- Project wealth ----
+  const snapshots = projectWealth(inp);
+  const retireSnap = snapshots.find(s => s.age === inp.retireAge) || snapshots[snapshots.length - 1];
+
+  // ---- Current net worth ----
+  const currentNetWorth = inp.cashSavings + inp.investPort + inp.ssbPrincipal + inp.sgxValue + inp.etfValue
+    + (inp.includeCPF ? inp.cpfOA + inp.cpfSA + inp.cpfMA : 0);
+
+  // ---- Years to FIRE (when net worth crosses FIRE number) ----
+  let yearsToFIRE = null;
+  let fireAge = null;
+  for (const snap of snapshots) {
+    if (snap.netWorth >= fireNumber) {
+      yearsToFIRE = snap.age - inp.currentAge;
+      fireAge = snap.age;
+      break;
+    }
+  }
+
+  // ---- Passive income at retirement ----
+  const retireNetWorth = retireSnap.netWorth;
+  const passiveIncomeAnnual = retireNetWorth * inp.swr;
+  const passiveIncomeMonthly = passiveIncomeAnnual / 12;
+
+  // ---- FIRE progress ----
+  const progressPct = Math.min(100, (currentNetWorth / fireNumber) * 100);
+
+  // ---- Update UI ----
+  setEl('metFireNumber', fmtSGD(fireNumber, true));
+  setEl('metSWR', (inp.swr * 100).toFixed(1));
+  setEl('metRetireAge', inp.retireAge);
+
+  if (yearsToFIRE !== null && fireAge !== null) {
+    setEl('metYearsLeft', `${yearsToFIRE} yrs`);
+    setEl('metFireDate', `On track → age ${fireAge}`);
+  } else {
+    setEl('metYearsLeft', `${yearsToRetire} yrs`);
+    setEl('metFireDate', `May not reach FIRE by ${inp.retireAge}`);
+  }
+
+  setEl('metPassiveIncome', fmtSGD(passiveIncomeMonthly, true) + '/mo');
+  setEl('metNetWorth', fmtSGD(currentNetWorth, true));
+  setEl('metNetWorthSub', inp.includeCPF ? 'Cash + Invest + CPF' : 'Cash + Invest (excl. CPF)');
+
+  setEl('progressPct', progressPct.toFixed(1) + '%');
+  document.getElementById('progressBar').style.width = progressPct + '%';
+
+  // Subtitle
+  if (yearsToFIRE !== null) {
+    const yr = new Date().getFullYear() + yearsToFIRE;
+    setEl('dashSubtitle', `You could reach FIRE in ${yearsToFIRE} years (${yr}) at age ${fireAge} 🎉`);
+  } else {
+    setEl('dashSubtitle', `With current trajectory, you may not reach FIRE by age ${inp.retireAge}. Consider saving more.`);
+  }
+
+  // Status badge
+  const badge = document.getElementById('fireStatusBadge');
+  if (progressPct >= 100) {
+    badge.textContent = '🔥 FIRE Achieved!';
+    badge.style.cssText = 'padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;background:linear-gradient(135deg,#f97316,#ef4444);color:white;';
+  } else if (progressPct >= 50) {
+    badge.textContent = '🌱 On Track';
+    badge.style.cssText = 'padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);';
+  } else {
+    badge.textContent = '📈 Building';
+    badge.style.cssText = 'padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;background:rgba(59,130,246,0.12);color:#3b82f6;border:1px solid rgba(59,130,246,0.3);';
+  }
+
+  // Timeline
+  setEl('tlCurrent', inp.currentAge);
+  setEl('tlRetire', inp.retireAge);
+  const tlPct = Math.min(95, ((inp.currentAge - 20) / (65 - 20)) * 100);
+  document.getElementById('tlFill').style.width = tlPct + '%';
+
+  // Wealth breakdown at retirement
+  renderWealthBreakdown(retireSnap);
+
+  // Charts
+  renderNetWorthChart(snapshots, inp, fireNumber);
+  renderBreakdownChart(retireSnap);
+
+  // Projection table
+  renderProjectionTable(snapshots, inp, fireNumber);
+}
+
+// ===========================
+// RENDER HELPERS
+// ===========================
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function renderWarnings(warnings) {
+  const area = document.getElementById('warningArea');
+  if (!warnings.length) { area.innerHTML = ''; return; }
+  area.innerHTML = warnings.map(w =>
+    `<div class="warning-box ${w.type}" style="margin-bottom:8px;">${w.msg}</div>`
+  ).join('');
+}
+
+function renderWealthBreakdown(snap) {
+  const container = document.getElementById('wealthBreakdown');
+  const items = [
+    { label: 'Cash', value: snap.cash, color: '#3b82f6' },
+    { label: 'Investments', value: snap.invest, color: '#8b5cf6' },
+    { label: 'SSB', value: snap.ssb, color: '#06b6d4' },
+    { label: 'SGX Stocks', value: snap.sgx, color: '#f59e0b' },
+    { label: 'US ETFs', value: snap.etf, color: '#10b981' },
+    { label: 'CPF OA', value: snap.cpfOA, color: '#34d399' },
+    { label: 'CPF SA', value: snap.cpfSA, color: '#6ee7b7' },
+    { label: 'CPF MA', value: snap.cpfMA, color: '#a7f3d0' },
+  ];
+  container.innerHTML = items.map(item => `
+    <div class="wealth-item">
+      <div class="wealth-item-label">
+        <span class="wealth-item-dot" style="background:${item.color}"></span>${item.label}
+      </div>
+      <div class="wealth-item-value">${fmtSGD(item.value, true)}</div>
+    </div>
+  `).join('');
+}
+
+function renderNetWorthChart(snapshots, inp, fireNumber) {
+  const labels = snapshots.map(s => s.age);
+  const netWorthData = snapshots.map(s => Math.round(s.netWorth));
+  const cpfData = snapshots.map(s => Math.round(s.cpfTotal));
+  const cashInvestData = snapshots.map(s => Math.round(s.cashInvest));
+  const fireLineData = snapshots.map(() => Math.round(fireNumber));
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+  const textColor = isDark ? '#64748b' : '#94a3b8';
+
+  const ctx = document.getElementById('netWorthChart').getContext('2d');
+
+  if (netWorthChartInst) netWorthChartInst.destroy();
+
+  netWorthChartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Total Net Worth',
+          data: netWorthData,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,0.08)',
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+        },
+        {
+          label: 'Cash & Invest',
+          data: cashInvestData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.05)',
+          borderWidth: 1.5,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          borderDash: [],
+        },
+        {
+          label: 'CPF Total',
+          data: cpfData,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.05)',
+          borderWidth: 1.5,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+        },
+        {
+          label: 'FIRE Number',
+          data: fireLineData,
+          borderColor: '#ef4444',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor,
+            font: { family: 'DM Sans', size: 11 },
+            boxWidth: 12,
+            padding: 16,
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : 'white',
+          borderColor: isDark ? '#334155' : '#e2e8f0',
+          borderWidth: 1,
+          titleColor: isDark ? '#f1f5f9' : '#0f172a',
+          bodyColor: isDark ? '#94a3b8' : '#64748b',
+          titleFont: { family: 'Syne', weight: '700', size: 12 },
+          bodyFont: { family: 'DM Sans', size: 11 },
+          padding: 12,
+          callbacks: {
+            title: (items) => `Age ${items[0].label}`,
+            label: (item) => ` ${item.dataset.label}: ${fmtSGD(item.raw, true)}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: { color: textColor, font: { family: 'DM Sans', size: 10 } },
+          title: { display: true, text: 'Age', color: textColor, font: { size: 11 } }
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            font: { family: 'DM Sans', size: 10 },
+            callback: (v) => v >= 1_000_000 ? `$${(v/1_000_000).toFixed(1)}M` : `$${(v/1_000).toFixed(0)}K`
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderBreakdownChart(snap) {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+
+  const ctx = document.getElementById('breakdownChart').getContext('2d');
+  if (breakdownChartInst) breakdownChartInst.destroy();
+
+  const data = [snap.cash, snap.invest, snap.ssb, snap.sgx, snap.etf, snap.cpfOA + snap.cpfSA + snap.cpfMA];
+  const labels = ['Cash', 'Investments', 'SSB', 'SGX', 'US ETFs', 'CPF'];
+  const colors = ['#3b82f6','#8b5cf6','#06b6d4','#f59e0b','#10b981','#34d399'];
+
+  breakdownChartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: data.map(v => Math.max(0, Math.round(v))),
+        backgroundColor: colors,
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: textColor,
+            font: { family: 'DM Sans', size: 10 },
+            boxWidth: 10,
+            padding: 10,
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : 'white',
+          borderColor: isDark ? '#334155' : '#e2e8f0',
+          borderWidth: 1,
+          titleColor: isDark ? '#f1f5f9' : '#0f172a',
+          bodyColor: isDark ? '#94a3b8' : '#64748b',
+          callbacks: {
+            label: (item) => ` ${item.label}: ${fmtSGD(item.raw, true)}`
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderProjectionTable(snapshots, inp, fireNumber) {
+  const tbody = document.getElementById('projTableBody');
+  const isDark = document.documentElement.classList.contains('dark');
+
+  // Show milestone ages: every 5 years + retirement age + fire year
+  const milestoneAges = new Set();
+  for (let a = inp.currentAge; a <= Math.min(inp.retireAge + 20, 85); a += 5) milestoneAges.add(a);
+  milestoneAges.add(inp.retireAge);
+  milestoneAges.add(55); // CPF withdrawal
+  milestoneAges.add(65); // CPF LIFE
+  milestoneAges.add(inp.currentAge + 1);
+
+  // Add FIRE crossover year
+  for (const snap of snapshots) {
+    if (snap.netWorth >= fireNumber) { milestoneAges.add(snap.age); break; }
+  }
+
+  const rows = snapshots.filter(s => milestoneAges.has(s.age) && s.age <= inp.retireAge + 20);
+
+  tbody.innerHTML = rows.map(snap => {
+    const firePct = Math.min(100, (snap.netWorth / fireNumber * 100)).toFixed(1);
+    const isFireCrossover = snap.netWorth >= fireNumber;
+    const isRetireAge = snap.age === inp.retireAge;
+
+    let rowStyle = '';
+    if (isRetireAge) rowStyle = isDark ? 'background:rgba(249,115,22,0.08);' : 'background:rgba(249,115,22,0.05);';
+    if (isFireCrossover && !isRetireAge) rowStyle = isDark ? 'background:rgba(16,185,129,0.08);' : 'background:rgba(16,185,129,0.05);';
+
+    const flags = [];
+    if (snap.age === 55) flags.push('<span style="font-size:10px;background:rgba(16,185,129,0.15);color:#059669;padding:1px 6px;border-radius:10px;">CPF Unlock</span>');
+    if (snap.age === 65) flags.push('<span style="font-size:10px;background:rgba(16,185,129,0.15);color:#059669;padding:1px 6px;border-radius:10px;">CPF LIFE</span>');
+    if (isRetireAge) flags.push('<span style="font-size:10px;background:rgba(249,115,22,0.15);color:#ea580c;padding:1px 6px;border-radius:10px;">🎯 Retire</span>');
+    if (isFireCrossover && snap.netWorth < fireNumber * 1.01) flags.push('<span style="font-size:10px;background:rgba(239,68,68,0.15);color:#dc2626;padding:1px 6px;border-radius:10px;">🔥 FIRE!</span>');
+
+    return `<tr style="${rowStyle}">
+      <td><strong>${snap.age}</strong> ${flags.join('')}</td>
+      <td style="color:var(--text-muted)">${snap.year}</td>
+      <td><strong>${fmtSGD(snap.netWorth, true)}</strong></td>
+      <td>${fmtSGD(snap.cpfTotal, true)}</td>
+      <td>${fmtSGD(snap.cashInvest, true)}</td>
+      <td>${snap.isRetired ? '<span style="color:var(--text-muted)">Retired</span>' : fmtSGD(snap.annualSavings, true)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:50px;height:5px;background:var(--border);border-radius:5px;overflow:hidden;">
+            <div style="width:${Math.min(100,firePct)}%;height:100%;background:${parseFloat(firePct)>=100?'#10b981':'#f97316'};border-radius:5px;"></div>
+          </div>
+          <span style="font-size:11px;color:${parseFloat(firePct)>=100?'#10b981':'var(--text-muted)'}">${firePct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ===========================
+// SYNC SLIDER + INPUT
+// ===========================
+function syncAndCalc(sourceId, targetId) {
+  const src = document.getElementById(sourceId);
+  const tgt = document.getElementById(targetId);
+  if (!src || !tgt) return;
+  tgt.value = src.value;
+
+  // Update display labels for sliders
+  if (sourceId === 'rangeInflation' || sourceId === 'inflation') {
+    const v = parseFloat(src.value).toFixed(1);
+    setEl('inflationDisplay', v + '%');
+    document.getElementById('rangeInflation').value = v;
+    document.getElementById('inflation').value = v;
+  }
+  if (sourceId === 'rangeSWR' || sourceId === 'swr') {
+    const v = parseFloat(src.value).toFixed(1);
+    setEl('swrDisplay', v + '%');
+    document.getElementById('rangeSWR').value = v;
+    document.getElementById('swr').value = v;
+  }
+
+  calculate();
+}
+
+// ===========================
+// COLLAPSIBLE SECTIONS
+// ===========================
+function toggleSection(id) {
+  const content = document.getElementById('section-' + id);
+  const caret = document.getElementById('caret-' + id);
+  if (!content) return;
+  const isOpen = !content.classList.contains('closed');
+  if (isOpen) {
+    content.classList.add('closed');
+    caret.classList.remove('open');
+  } else {
+    content.classList.remove('closed');
+    content.style.maxHeight = '600px';
+    caret.classList.add('open');
+  }
+}
+
+// ===========================
+// DARK MODE
+// ===========================
+function toggleDarkMode() {
+  const html = document.documentElement;
+  const btn = document.getElementById('darkModeBtn');
+  if (html.classList.contains('dark')) {
+    html.classList.remove('dark');
+    btn.textContent = '🌙 Dark';
+    localStorage.setItem('sgfire_dark', '0');
+  } else {
+    html.classList.add('dark');
+    btn.textContent = '☀️ Light';
+    localStorage.setItem('sgfire_dark', '1');
+  }
+  // Redraw charts with new theme
+  setTimeout(calculate, 50);
+}
+
+// ===========================
+// SAVE / LOAD / RESET
+// ===========================
+const STORAGE_KEY = 'sgfire_inputs_v1';
+
+function saveToLocalStorage() {
+  const ids = ['currentAge','retireAge','monthlySalary','monthlyExpenses',
+    'cashSavings','investmentPortfolio','ssbPrincipal','ssbRate',
+    'sgxValue','sgxReturn','sgxDividend','etfValue','etfDCA','etfReturn',
+    'inflation','swr','investReturn','salaryGrowth','cpfOA','cpfSA','cpfMA'];
+  const data = {};
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  data['includeCPF'] = document.getElementById('includeCPF').checked;
+  data['adjustInflation'] = document.getElementById('adjustInflation').checked;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+  // Brief success flash
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Saved!';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+function loadFromLocalStorage() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) { alert('No saved data found.'); return; }
+  const data = JSON.parse(raw);
+  Object.entries(data).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = val === true || val === 'true';
+    else el.value = val;
+  });
+  // Sync range sliders
+  syncRanges();
+  calculate();
+}
+
+function resetDefaults() {
+  if (!confirm('Reset all inputs to defaults?')) return;
+  document.getElementById('currentAge').value = 30;
+  document.getElementById('retireAge').value = 55;
+  document.getElementById('monthlySalary').value = 8000;
+  document.getElementById('monthlyExpenses').value = 3500;
+  document.getElementById('cashSavings').value = 50000;
+  document.getElementById('investmentPortfolio').value = 80000;
+  document.getElementById('ssbPrincipal').value = 20000;
+  document.getElementById('ssbRate').value = 3.0;
+  document.getElementById('sgxValue').value = 30000;
+  document.getElementById('sgxReturn').value = 7;
+  document.getElementById('sgxDividend').value = 4;
+  document.getElementById('etfValue').value = 50000;
+  document.getElementById('etfDCA').value = 12000;
+  document.getElementById('etfReturn').value = 8;
+  document.getElementById('inflation').value = 2.5;
+  document.getElementById('swr').value = 4;
+  document.getElementById('investReturn').value = 6;
+  document.getElementById('salaryGrowth').value = 3;
+  document.getElementById('cpfOA').value = 60000;
+  document.getElementById('cpfSA').value = 40000;
+  document.getElementById('cpfMA').value = 25000;
+  document.getElementById('includeCPF').checked = true;
+  document.getElementById('adjustInflation').checked = true;
+  syncRanges();
+  calculate();
+}
+
+function syncRanges() {
+  const pairs = [
+    ['currentAge', 'rangeAge'],
+    ['retireAge', 'rangeRetireAge'],
+    ['inflation', 'rangeInflation'],
+    ['swr', 'rangeSWR'],
+  ];
+  pairs.forEach(([inp, rng]) => {
+    const i = document.getElementById(inp);
+    const r = document.getElementById(rng);
+    if (i && r) r.value = i.value;
+  });
+  setEl('inflationDisplay', parseFloat(document.getElementById('inflation').value).toFixed(1) + '%');
+  setEl('swrDisplay', parseFloat(document.getElementById('swr').value).toFixed(1) + '%');
+}
+
+// ===========================
+// INIT
+// ===========================
+window.addEventListener('DOMContentLoaded', () => {
+  // Restore dark mode
+  if (localStorage.getItem('sgfire_dark') === '1') {
+    document.documentElement.classList.add('dark');
+    document.getElementById('darkModeBtn').textContent = '☀️ Light';
+  }
+
+  // Attempt to load saved data
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      Object.entries(data).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') el.checked = val === true || val === 'true';
+        else el.value = val;
+      });
+    } catch(e) {}
+  }
+
+  syncRanges();
+  calculate();
+
+  // Input debouncing for performance
+  let debTimer;
+  document.querySelectorAll('input[type="number"]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      clearTimeout(debTimer);
+      debTimer = setTimeout(calculate, 120);
+    });
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "appId": "com.sgfinance.suite",
+  "productName": "SG Finance Suite",
+  "copyright": "Copyright © 2026",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "dist-electron/**/*"
+  ],
+  "win": {
+    "target": "portable",
+    "artifactName": "SG_Finance_Suite.exe",
+    "icon": "public/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false
+  },
+  "asar": true
+}

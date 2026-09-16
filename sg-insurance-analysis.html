@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ShieldCheck SG — Insurance Gap Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B1220; --ink-soft:#141D2E; --ink-softer:#1B2637;
+  --paper:#F6F4EE; --paper-soft:#EDEAE0; --paper-softer:#E2DED2;
+  --line-l: rgba(11,18,32,0.10); --line-d: rgba(255,255,255,0.10);
+  --emerald:#1F7A5C; --emerald-soft:#E4F1EC; --emerald-d-soft:#12332A;
+  --amber:#B8873A; --amber-soft:#F6EBD8; --amber-d-soft:#3A2E15;
+  --brick:#AE4A3B; --brick-soft:#F7E4E0; --brick-d-soft:#3B1E19;
+  --blue:#3A6EA5; --blue-soft:#E3EBF4; --blue-d-soft:#182B3E;
+  --radius-sm:10px; --radius:16px; --radius-lg:22px;
+  --shadow-sm: 0 1px 2px rgba(15,20,30,0.06), 0 1px 1px rgba(15,20,30,0.04);
+  --shadow: 0 8px 24px -8px rgba(15,20,30,0.16), 0 2px 6px rgba(15,20,30,0.06);
+  --shadow-lg: 0 24px 60px -16px rgba(15,20,30,0.28), 0 4px 12px rgba(15,20,30,0.08);
+  --font-display:'Space Grotesk', ui-sans-serif, sans-serif;
+  --font-body:'Inter', ui-sans-serif, sans-serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+[data-theme="light"]{
+  --bg:var(--paper); --bg-elev:#FFFFFF; --bg-sunken:var(--paper-soft);
+  --text:#14181F; --text-soft:#4B5160; --text-faint:#828A9A;
+  --line:var(--line-l); --sidebar-bg:#FBFAF6; --card-bg:#FFFFFF;
+  --input-bg:#FFFFFF;
+}
+[data-theme="dark"]{
+  --bg:var(--ink); --bg-elev:var(--ink-soft); --bg-sunken:#080D16;
+  --text:#EEF1F6; --text-soft:#AFB8C7; --text-faint:#71798C;
+  --line:var(--line-d); --sidebar-bg:#0A111C; --card-bg:var(--ink-soft);
+  --input-bg:#0F1826;
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--text);
+  transition:background .35s var(--ease),color .35s var(--ease);min-height:100vh;
+  -webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:-0.01em;}
+p{margin:0;}
+button{font-family:inherit;}
+.num,.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+::selection{background:var(--emerald);color:#fff;}
+a{color:inherit;}
+:focus-visible{outline:2px solid var(--emerald);outline-offset:2px;border-radius:6px;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important;}}
+
+/* ---------- App shell ---------- */
+#app{display:flex;min-height:100vh;}
+.sidebar{width:264px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;
+  transition:transform .3s var(--ease), background .35s var(--ease), border-color .35s var(--ease);}
+.brand{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;}
+.brand-mark{width:34px;height:34px;flex-shrink:0;}
+.brand-name{font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:-0.01em;}
+.brand-sub{font-size:10.5px;color:var(--text-faint);letter-spacing:.06em;text-transform:uppercase;margin-top:1px;}
+.nav{flex:1;overflow-y:auto;padding:6px 12px;display:flex;flex-direction:column;gap:2px;}
+.nav-group-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);
+  padding:16px 10px 6px;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;cursor:pointer;
+  color:var(--text-soft);font-size:13.5px;font-weight:500;border:none;background:none;width:100%;text-align:left;
+  transition:background .15s var(--ease),color .15s var(--ease);}
+.nav-item svg{width:17px;height:17px;flex-shrink:0;opacity:.85;}
+.nav-item:hover{background:var(--bg-sunken);color:var(--text);}
+.nav-item.active{background:var(--emerald);color:#fff;}
+.nav-item.active svg{opacity:1;}
+.nav-badge{margin-left:auto;font-size:10px;font-family:var(--font-mono);background:var(--amber-soft);color:var(--amber);
+  padding:1px 6px;border-radius:20px;font-weight:600;}
+.nav-item.active .nav-badge{background:rgba(255,255,255,.25);color:#fff;}
+.sidebar-foot{padding:14px 18px 18px;border-top:1px solid var(--line);}
+.theme-toggle{display:flex;align-items:center;gap:8px;background:var(--bg-sunken);border-radius:12px;padding:4px;}
+.theme-btn{flex:1;padding:7px 0;text-align:center;border-radius:9px;border:none;background:none;cursor:pointer;
+  color:var(--text-faint);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;}
+.theme-btn.active{background:var(--card-bg);color:var(--text);box-shadow:var(--shadow-sm);}
+.theme-btn svg{width:14px;height:14px;}
+
+.main{flex:1;margin-left:264px;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb, var(--bg) 88%, transparent);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding:16px 32px;display:flex;align-items:center;gap:16px;}
+.menu-btn{display:none;background:var(--bg-sunken);border:1px solid var(--line);border-radius:10px;width:38px;height:38px;
+  align-items:center;justify-content:center;cursor:pointer;color:var(--text);}
+.topbar-title{font-size:19px;}
+.topbar-sub{font-size:12.5px;color:var(--text-faint);margin-top:2px;}
+.topbar-spacer{flex:1;}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;
+  background:var(--emerald-soft);color:var(--emerald);}
+[data-theme="dark"] .pill{background:var(--emerald-d-soft);}
+.content{padding:28px 32px 80px;max-width:1280px;width:100%;margin:0 auto;flex:1;}
+.overlay{position:fixed;inset:0;background:rgba(10,14,20,.5);z-index:35;opacity:0;pointer-events:none;transition:opacity .25s;}
+.overlay.show{opacity:1;pointer-events:auto;}
+
+@media (max-width:960px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg);}
+  .main{margin-left:0;}
+  .menu-btn{display:flex;}
+  .content{padding:20px 16px 80px;}
+  .topbar{padding:14px 16px;}
+}
+
+/* ---------- Building blocks ---------- */
+.card{background:var(--card-bg);border:1px solid var(--line);border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow-sm);transition:border-color .3s, background .3s;}
+.card-lg{border-radius:var(--radius-lg);padding:24px;}
+.card-title{font-size:15px;font-weight:600;font-family:var(--font-display);margin-bottom:2px;}
+.card-desc{font-size:12.5px;color:var(--text-faint);margin-bottom:14px;}
+.grid{display:grid;gap:16px;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+.stat-card{display:flex;flex-direction:column;gap:6px;}
+.stat-label{font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+.stat-value{font-family:var(--font-mono);font-size:26px;font-weight:600;letter-spacing:-0.01em;}
+.stat-foot{font-size:12px;color:var(--text-soft);display:flex;align-items:center;gap:5px;}
+.trend-up{color:var(--emerald);} .trend-down{color:var(--brick);}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:11px;
+  font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:transform .15s,filter .15s,background .15s;
+  white-space:nowrap;}
+.btn:active{transform:scale(.97);}
+.btn svg{width:15px;height:15px;}
+.btn-primary{background:var(--emerald);color:#fff;}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-ghost{background:var(--bg-sunken);color:var(--text);border-color:var(--line);}
+.btn-ghost:hover{background:var(--bg-elev);}
+.btn-outline{background:transparent;border-color:var(--line);color:var(--text);}
+.btn-outline:hover{background:var(--bg-sunken);}
+.btn-danger{background:var(--brick-soft);color:var(--brick);}
+[data-theme="dark"] .btn-danger{background:var(--brick-d-soft);}
+.btn-sm{padding:6px 11px;font-size:12px;border-radius:9px;}
+.btn-icon{padding:8px;border-radius:9px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.badge-emerald{background:var(--emerald-soft);color:var(--emerald);} [data-theme="dark"] .badge-emerald{background:var(--emerald-d-soft);}
+.badge-amber{background:var(--amber-soft);color:var(--amber);} [data-theme="dark"] .badge-amber{background:var(--amber-d-soft);}
+.badge-brick{background:var(--brick-soft);color:var(--brick);} [data-theme="dark"] .badge-brick{background:var(--brick-d-soft);}
+.badge-blue{background:var(--blue-soft);color:var(--blue);} [data-theme="dark"] .badge-blue{background:var(--blue-d-soft);}
+.badge-neutral{background:var(--bg-sunken);color:var(--text-soft);}
+
+label{display:block;font-size:12.5px;font-weight:600;color:var(--text-soft);margin-bottom:6px;}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--input-bg);
+  color:var(--text);font-size:13.5px;font-family:inherit;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--emerald);}
+textarea{resize:vertical;min-height:64px;}
+.field{margin-bottom:14px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:560px){.field-row{grid-template-columns:1fr;}}
+.field-hint{font-size:11px;color:var(--text-faint);margin-top:4px;}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23828A9A'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;}
+
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+.section-head h2{font-size:20px;}
+.section-head .sub{font-size:12.5px;color:var(--text-faint);margin-top:3px;}
+
+.tabs{display:flex;gap:4px;background:var(--bg-sunken);padding:4px;border-radius:12px;width:fit-content;flex-wrap:wrap;}
+.tab-btn{padding:7px 14px;border-radius:9px;border:none;background:none;font-size:12.5px;font-weight:600;color:var(--text-soft);cursor:pointer;}
+.tab-btn.active{background:var(--card-bg);color:var(--text);box-shadow:var(--shadow-sm);}
+
+.divider{height:1px;background:var(--line);margin:18px 0;border:none;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-faint);}
+.empty-state svg{width:40px;height:40px;margin-bottom:12px;opacity:.5;}
+.empty-state .btn{margin-top:14px;}
+
+/* Policy cards */
+.policy-card{border:1px solid var(--line);border-radius:var(--radius);padding:18px;background:var(--card-bg);
+  display:flex;flex-direction:column;gap:10px;transition:box-shadow .2s, transform .2s;position:relative;}
+.policy-card:hover{box-shadow:var(--shadow);}
+.policy-card.archived{opacity:.55;}
+.policy-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.policy-provider{font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.policy-name{font-family:var(--font-display);font-size:15.5px;font-weight:600;margin-top:2px;}
+.policy-meta{display:flex;flex-wrap:wrap;gap:6px;}
+.policy-figures{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;background:var(--bg-sunken);border-radius:12px;}
+.pf-label{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;}
+.pf-value{font-family:var(--font-mono);font-size:14px;font-weight:600;margin-top:2px;}
+.policy-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,14,22,.55);backdrop-filter:blur(2px);z-index:60;
+  display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-backdrop.show{opacity:1;pointer-events:auto;}
+.modal{background:var(--card-bg);border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);transform:translateY(12px) scale(.98);transition:transform .25s var(--ease);border:1px solid var(--line);}
+.modal-backdrop.show .modal{transform:translateY(0) scale(1);}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;background:var(--card-bg);z-index:2;}
+.modal-body{padding:22px 24px;}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;
+  position:sticky;bottom:0;background:var(--card-bg);}
+.modal-close{background:var(--bg-sunken);border:none;width:32px;height:32px;border-radius:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:var(--text-soft);}
+.fieldset-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);
+  margin:18px 0 10px;}
+.fieldset-title:first-child{margin-top:0;}
+.chip-select{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--bg-sunken);font-size:12px;
+  font-weight:600;cursor:pointer;color:var(--text-soft);}
+.chip.on{background:var(--emerald);border-color:var(--emerald);color:#fff;}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:80;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--ink);color:#fff;padding:11px 16px;border-radius:11px;font-size:13px;font-weight:500;
+  box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;animation:toastin .25s var(--ease);}
+[data-theme="light"] .toast{background:#1B2637;}
+@keyframes toastin{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* Insight list */
+.insight{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);}
+.insight:last-child{border-bottom:none;}
+.insight-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.insight-icon svg{width:15px;height:15px;}
+.insight-text{font-size:13.5px;line-height:1.5;}
+.insight-tag{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:3px;}
+
+/* Gap rows */
+.gap-row{display:grid;grid-template-columns:180px 1fr 90px 90px;gap:16px;align-items:center;padding:13px 0;
+  border-bottom:1px solid var(--line);}
+.gap-row:last-child{border-bottom:none;}
+@media(max-width:760px){.gap-row{grid-template-columns:1fr;gap:6px;}}
+.gap-cat{font-size:13.5px;font-weight:600;}
+.gap-bar-track{height:9px;background:var(--bg-sunken);border-radius:6px;overflow:hidden;position:relative;}
+.gap-bar-fill{height:100%;border-radius:6px;transition:width .5s var(--ease);}
+.gap-pct{font-family:var(--font-mono);font-size:12.5px;text-align:right;}
+
+/* Score gauge ring center */
+.score-hero{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+.score-num{font-family:var(--font-display);font-size:52px;font-weight:700;line-height:1;}
+.score-grade{font-family:var(--font-mono);font-size:14px;color:var(--text-faint);margin-top:6px;}
+
+/* FAQ accordion */
+.faq-item{border-bottom:1px solid var(--line);}
+.faq-item:last-child{border-bottom:none;}
+.faq-q{padding:15px 2px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;
+  font-size:13.5px;gap:10px;}
+.faq-q svg{width:16px;height:16px;flex-shrink:0;transition:transform .2s;color:var(--text-faint);}
+.faq-item.open .faq-q svg{transform:rotate(180deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s var(--ease);}
+.faq-item.open .faq-a{max-height:400px;}
+.faq-a-inner{padding:0 2px 16px;font-size:13px;color:var(--text-soft);line-height:1.65;}
+
+.disclaimer-bar{background:var(--amber-soft);border:1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+  border-radius:14px;padding:14px 16px;font-size:12px;color:#6b5121;line-height:1.55;display:flex;gap:10px;}
+[data-theme="dark"] .disclaimer-bar{background:var(--amber-d-soft);color:#E4C98A;}
+.disclaimer-bar svg{width:18px;height:18px;flex-shrink:0;margin-top:1px;color:var(--amber);}
+
+.help-text{font-size:12px;color:var(--text-faint);}
+.riskbadge-low{color:var(--emerald);} .riskbadge-med{color:var(--amber);} .riskbadge-high{color:var(--brick);}
+
+@media print{
+  .sidebar,.topbar,.no-print{display:none !important;}
+  .main{margin-left:0 !important;}
+  body{background:#fff;color:#000;}
+  .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid;}
+}
+</style>
+</head>
+<body data-theme="light">
+<div id="app">
+  <div class="overlay" id="sidebarOverlay" onclick="UI.closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 34 34" fill="none">
+        <circle cx="17" cy="17" r="16" stroke="#1F7A5C" stroke-width="2"/>
+        <circle cx="17" cy="17" r="10.5" stroke="#1F7A5C" stroke-width="2" opacity=".55"/>
+        <circle cx="17" cy="17" r="5" fill="#1F7A5C"/>
+      </svg>
+      <div>
+        <div class="brand-name">ShieldCheck SG</div>
+        <div class="brand-sub">Insurance Gap Analysis</div>
+      </div>
+    </div>
+    <nav class="nav" id="navList"></nav>
+    <div class="sidebar-foot">
+      <div class="theme-toggle">
+        <button class="theme-btn" id="btnLight" onclick="UI.setTheme('light')">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="4"/><path d="M10 1v2M10 17v2M3.5 3.5l1.4 1.4M15.1 15.1l1.4 1.4M1 10h2M17 10h2M3.5 16.5l1.4-1.4M15.1 4.9l1.4-1.4"/></svg>
+          Light
+        </button>
+        <button class="theme-btn" id="btnDark" onclick="UI.setTheme('dark')">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M17 12.3A7.5 7.5 0 018 3a1 1 0 00-1.1 1.4A6.5 6.5 0 1015.6 13.4 1 1 0 0017 12.3z"/></svg>
+          Dark
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-btn" onclick="UI.openSidebar()" aria-label="Open menu">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 5h14M2 9h14M2 13h14"/></svg>
+      </button>
+      <div>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-sub" id="topbarSub">Your protection, at a glance</div>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="pill" id="scorePill">Health Score —</div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalRoot"></div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+'use strict';
+/* =========================================================================
+   SG INSURANCE GAP ANALYSIS — APPLICATION
+   Modules: Data, Utils, Storage, State, PortfolioEngine, GapEngine,
+            ScoringEngine, InsightsEngine, ScenarioEngine, Charts, Views, UI
+   ========================================================================= */
+
+/* ---------------------------------------------------------------------
+   MODULE: DATA — providers, products, riders (publicly known categories,
+   grounded in real, currently-marketed product lines as of mid-2026).
+   No fabricated product names. "Other" provider uses generic labels.
+--------------------------------------------------------------------- */
+const DATA = (() => {
+
+  const PROVIDERS = [
+    { id:'aia', name:'AIA Singapore' },
+    { id:'pru', name:'Prudential Singapore' },
+    { id:'ge',  name:'Great Eastern' },
+    { id:'income', name:'Income Insurance' },
+    { id:'singlife', name:'Singlife' },
+    { id:'other', name:'Other / Not Listed' },
+  ];
+
+  // Policy type categories used across the whole app (gap analysis keys off these)
+  const CATEGORIES = [
+    { id:'life', label:'Life Insurance (Term / Whole Life)', group:'protection' },
+    { id:'hosp', label:'Hospitalisation (Integrated Shield Plan)', group:'health' },
+    { id:'ci', label:'Critical Illness', group:'health' },
+    { id:'eci', label:'Early Critical Illness', group:'health' },
+    { id:'di', label:'Disability Income', group:'income' },
+    { id:'pa', label:'Personal Accident', group:'protection' },
+    { id:'mortgage', label:'Mortgage Protection', group:'asset' },
+    { id:'home', label:'Home Insurance (Fire/Structure)', group:'asset' },
+    { id:'contents', label:'Contents Insurance', group:'asset' },
+    { id:'careshield', label:'CareShield Life Supplement', group:'eldercare' },
+    { id:'cancer', label:'Cancer Plan', group:'health' },
+    { id:'travel', label:'Travel Insurance', group:'general' },
+    { id:'general', label:'General / Motor / Other', group:'general' },
+    { id:'ilp', label:'Investment-Linked Policy (ILP)', group:'excluded' },
+  ];
+
+  // Products by provider, organised by category. These reflect commonly
+  // known, currently marketed Integrated Shield Plans and product lines.
+  const PRODUCTS = {
+    aia: {
+      hosp: ['AIA HealthShield Gold Max A','AIA HealthShield Gold Max B','AIA HealthShield Gold Max B Lite'],
+      life: ['AIA Term Protector (Term Life)','AIA Whole Life product line'],
+      ci: ['AIA Critical illness plan (standalone/rider)'],
+      eci: ['AIA Early critical illness rider'],
+      di: ['AIA Disability income plan'],
+      pa: ['AIA Personal accident plan'],
+      cancer: ['AIA cancer coverage rider/plan'],
+      careshield: ['AIA CareShield Life supplement'],
+      home: ['AIA HomeProtect (home insurance)'],
+      travel: ['AIA Travel insurance plan'],
+    },
+    pru: {
+      hosp: ['PRUShield (Standard)','PRUShield Plus','PRUShield Premier'],
+      life: ['PRUActive Term (Term Life)','Prudential Whole Life product line'],
+      ci: ['PRUCritical Assist / Critical illness rider'],
+      eci: ['Prudential Early critical illness rider'],
+      di: ['Prudential Disability income plan'],
+      pa: ['Prudential Personal accident plan'],
+      cancer: ['Prudential cancer coverage rider'],
+      careshield: ['Prudential CareShield Life supplement'],
+      home: ['Prudential Home insurance plan'],
+      travel: ['PRUTravel insurance plan'],
+    },
+    ge: {
+      hosp: ['GREAT SupremeHealth A Plus','GREAT SupremeHealth P Plus','GREAT SupremeHealth B Plus'],
+      life: ['GREAT Term (Term Life)','Great Eastern Whole Life product line'],
+      ci: ['Great Eastern Critical illness rider'],
+      eci: ['Great Eastern Early critical illness rider'],
+      di: ['Great Eastern Disability income plan'],
+      pa: ['Great Eastern Personal accident plan'],
+      cancer: ['Great Eastern cancer coverage rider'],
+      careshield: ['Great Eastern CareShield Life supplement'],
+      home: ['Great Eastern Home insurance plan'],
+      travel: ['Great Eastern Travel Smart insurance'],
+    },
+    income: {
+      hosp: ['Income IncomeShield Preferred','Income IncomeShield Advantage','Income IncomeShield Basic'],
+      life: ['Income Term life plan','Income Whole life product line'],
+      ci: ['Income Critical illness rider'],
+      eci: ['Income Early critical illness rider'],
+      di: ['Income Disability income plan'],
+      pa: ['Income Personal accident plan (PA / Care)'],
+      cancer: ['Income cancer coverage rider'],
+      careshield: ['Income CareShield Life supplement'],
+      home: ['Income Home insurance plan'],
+      travel: ['Income Travel insurance plan'],
+    },
+    singlife: {
+      hosp: ['Singlife Shield Plan 1','Singlife Shield Plan 2','Singlife Shield Starter'],
+      life: ['Singlife Term Life','Singlife Whole Life product line'],
+      ci: ['Singlife Critical illness rider'],
+      eci: ['Singlife Early critical illness rider'],
+      di: ['Singlife Disability income plan'],
+      pa: ['Singlife Personal accident plan'],
+      cancer: ['Singlife cancer coverage rider'],
+      careshield: ['Singlife CareShield Life supplement'],
+      home: ['Singlife Home insurance plan'],
+      travel: ['Singlife Travel insurance plan'],
+    },
+    other: {
+      hosp:['Integrated Shield Plan (specify insurer)'], life:['Term Life plan','Whole Life plan'],
+      ci:['Critical illness plan/rider'], eci:['Early critical illness rider'],
+      di:['Disability income plan'], pa:['Personal accident plan'],
+      cancer:['Cancer plan/rider'], careshield:['CareShield Life supplement'],
+      home:['Home insurance plan'], contents:['Contents insurance plan'],
+      travel:['Travel insurance plan'], general:['General insurance plan'],
+      mortgage:['Mortgage protection / MRTA/MLTA plan'], ilp:['Investment-linked policy'],
+    }
+  };
+  // mortgage / contents / general / ilp are cross-insurer generic categories
+  ['aia','pru','ge','income','singlife'].forEach(p=>{
+    PRODUCTS[p].mortgage = [`${label(p)} Mortgage protection plan (decreasing term / MRTA-MLTA style)`];
+    PRODUCTS[p].contents = [`${label(p)} Contents insurance plan`];
+    PRODUCTS[p].general = [`${label(p)} General insurance (motor / other)`];
+    PRODUCTS[p].ilp = [`${label(p)} Investment-linked policy (ILP)`];
+  });
+  function label(id){ return PROVIDERS.find(x=>x.id===id).name; }
+
+  // Riders by provider — commonly known rider categories (generic naming to
+  // avoid asserting exact current product names that change over time).
+  const RIDERS = {
+    aia: [
+      {name:'Hospital Cash / Hospital Rider', purpose:'Pays a daily cash benefit during hospitalisation, on top of Shield Plan claims.', use:'Covers incidental costs not reimbursed by the Shield Plan (e.g. income loss while warded).'},
+      {name:'Private/Specialist Rider add-on', purpose:'Extends panel or specialist access under the Shield Plan.', use:'For policyholders who want broader specialist choice.'},
+      {name:'Waiver of Premium', purpose:'Waives future premiums if the life assured is diagnosed with a defined critical illness or total disability.', use:'Keeps the base policy in force without further payment after a claim event.'},
+      {name:'Payor Benefit', purpose:'Waives premiums on a child\u2019s policy if the paying parent dies or becomes disabled.', use:'Common on juvenile / children\u2019s plans.'},
+      {name:'Early Critical Illness Rider', purpose:'Pays out on early-stage, not just advanced-stage, critical illnesses.', use:'Bridges the gap between standard CI (late-stage) and real-world diagnoses.'},
+      {name:'Cancer Rider', purpose:'Additional payout specifically for cancer diagnosis, sometimes staged by severity.', use:'Supplements CI coverage given cancer\u2019s high prevalence in Singapore.'},
+    ],
+    pru: [
+      {name:'PRUExtra-style Shield Rider', purpose:'Reduces co-insurance/deductible on the Shield Plan (subject to the mandatory 5% co-payment since 2021 MOH rules).', use:'Lowers out-of-pocket cash outlay during hospitalisation.'},
+      {name:'Waiver of Premium', purpose:'Waives future premiums upon qualifying critical illness or disability.', use:'Protects policy continuity after a claim.'},
+      {name:'Payor Benefit', purpose:'Waives premiums on a child\u2019s policy if the paying parent dies/disabled.', use:'Used on children\u2019s education/protection plans.'},
+      {name:'Early Critical Illness Rider', purpose:'Extends CI payout to early/intermediate stage conditions.', use:'Broadens the definition of a claimable critical illness.'},
+      {name:'Specialist / Panel Rider', purpose:'Access to Prudential\u2019s specialist panel network with pre-agreed fees.', use:'Reduces surprise specialist billing.'},
+      {name:'Children Rider', purpose:'Attaches child protection benefits to a parent\u2019s policy.', use:'Cost-efficient way to insure young dependants.'},
+    ],
+    ge: [
+      {name:'Supplementary Shield Rider (co-payment rider)', purpose:'Reduces co-insurance on the Shield Plan, subject to the MOH-mandated minimum 5% co-payment.', use:'Lowers cash portion of large hospital bills.'},
+      {name:'Waiver of Premium', purpose:'Waives premiums after a qualifying critical illness/disability claim.', use:'Maintains coverage without further payment.'},
+      {name:'Payor Benefit', purpose:'Waives premium on dependants\u2019 policies if the payor dies/disabled.', use:'Protects children\u2019s plans if a parent is the payor.'},
+      {name:'Early Critical Illness Rider', purpose:'Covers early/intermediate stage critical illnesses.', use:'Fills the gap left by late-stage-only CI definitions.'},
+      {name:'Disability Rider', purpose:'Adds a disability income or lump sum benefit to a base life policy.', use:'For income replacement if unable to work.'},
+    ],
+    income: [
+      {name:'Shield Rider (co-payment reduction)', purpose:'Reduces co-insurance on the IncomeShield plan, subject to the mandatory minimum 5% co-payment.', use:'Manages cash outlay for large claims.'},
+      {name:'Waiver of Premium', purpose:'Waives premiums upon qualifying CI/disability diagnosis.', use:'Keeps policy active post-claim.'},
+      {name:'Payor Benefit', purpose:'Waives premiums on a child\u2019s plan if the payor parent dies/disabled.', use:'Common addition to children\u2019s plans.'},
+      {name:'Early Critical Illness Rider', purpose:'Extends CI coverage to earlier-stage conditions.', use:'Broader real-world claim coverage.'},
+      {name:'Cancer Rider', purpose:'Dedicated cancer payout, often staged.', use:'Supplements general CI coverage.'},
+    ],
+    singlife: [
+      {name:'Shield Rider (co-payment reduction, e.g. \u201cHealth Plus\u201d style)', purpose:'Reduces co-insurance on the Shield plan, subject to the mandatory minimum 5% co-payment.', use:'Lowers out-of-pocket cash for hospitalisation.'},
+      {name:'Waiver of Premium', purpose:'Waives future premiums after qualifying CI/disability event.', use:'Protects policy continuity.'},
+      {name:'Payor Benefit', purpose:'Waives premiums on a child\u2019s plan if the payor dies/disabled.', use:'Used on juvenile plans.'},
+      {name:'Early Critical Illness Rider', purpose:'Extends coverage to earlier-stage illnesses.', use:'Broadens claimable conditions.'},
+      {name:'Specialist Rider', purpose:'Broadens access to specialist panel / private options.', use:'For those wanting more provider choice.'},
+    ],
+    other: [
+      {name:'Hospital Rider', purpose:'General term for riders reducing co-payment/deductible on hospitalisation plans.', use:'Verify exact structure with the insurer.'},
+      {name:'Waiver of Premium', purpose:'Waives premiums after a defined claim event.', use:'Common across insurers.'},
+      {name:'Payor Benefit', purpose:'Protects a dependant\u2019s policy if the paying parent dies/disabled.', use:'Common on children\u2019s plans.'},
+      {name:'Critical Illness Rider', purpose:'Adds CI coverage to a base policy.', use:'Verify staging (early vs late-stage) with the insurer.'},
+      {name:'Children Rider', purpose:'Attaches basic protection for children to a parent policy.', use:'Cost-efficient dependant coverage.'},
+    ],
+  };
+
+  return { PROVIDERS, CATEGORIES, PRODUCTS, RIDERS, label };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: UTILS
+--------------------------------------------------------------------- */
+const Utils = (() => {
+  function uid(prefix){ return (prefix||'id')+'_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); }
+  function fmtMoney(n, opts){
+    n = Number(n)||0;
+    const abbr = opts && opts.abbr;
+    if(abbr){
+      if(Math.abs(n) >= 1000000) return '$'+(n/1000000).toFixed(2).replace(/\.00$/,'')+'M';
+      if(Math.abs(n) >= 1000) return '$'+(n/1000).toFixed(0)+'K';
+    }
+    return '$'+n.toLocaleString('en-SG', {maximumFractionDigits:0});
+  }
+  function fmtDate(d){
+    if(!d) return '\u2014';
+    const dt = new Date(d);
+    if(isNaN(dt)) return '\u2014';
+    return dt.toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function daysUntil(d){
+    if(!d) return null;
+    const dt = new Date(d); if(isNaN(dt)) return null;
+    return Math.ceil((dt - new Date())/(1000*60*60*24));
+  }
+  function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+  function sum(arr, fn){ return arr.reduce((s,x)=>s+(Number(fn?fn(x):x)||0),0); }
+  function groupBy(arr, fn){ const o={}; arr.forEach(x=>{ const k=fn(x); (o[k]=o[k]||[]).push(x); }); return o; }
+  function download(filename, content, mime){
+    const blob = new Blob([content], {type:mime||'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+  }
+  return { uid, fmtMoney, fmtDate, daysUntil, clamp, escapeHtml, debounce, sum, groupBy, download };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: STORAGE — auto-persist to localStorage
+--------------------------------------------------------------------- */
+const Storage = (() => {
+  const KEY = 'shieldcheck_sg_v1';
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){ console.warn('Storage load failed', e); return null; }
+  }
+  function save(state){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch(e){ console.warn('Storage save failed', e); }
+  }
+  function clear(){ localStorage.removeItem(KEY); }
+  return { load, save, clear };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: STATE — single source of truth
+--------------------------------------------------------------------- */
+const State = (() => {
+  const defaultProfile = {
+    age:35, gender:'male', occupation:'', annualIncome:72000, monthlyIncome:6000,
+    employmentType:'employee', maritalStatus:'married', children:1, dependants:2,
+    housingType:'hdb', mortgageBalance:250000, otherLoans:20000, emergencyFund:15000,
+    netWorth:180000, cpfOA:60000, cpfSA:40000, cpfMA:30000, retirementSavings:20000,
+  };
+  let data = {
+    profile: {...defaultProfile},
+    portfolio: [],
+    settings: { theme:'light', currency:'SGD' },
+    activeTab: 'dashboard',
+  };
+
+  function init(){
+    const loaded = Storage.load();
+    if(loaded){
+      data.profile = {...defaultProfile, ...(loaded.profile||{})};
+      data.portfolio = loaded.portfolio || [];
+      data.settings = {...data.settings, ...(loaded.settings||{})};
+    } else {
+      seedSampleData();
+    }
+  }
+  function persist(){ Storage.save({profile:data.profile, portfolio:data.portfolio, settings:data.settings}); }
+
+  function seedSampleData(){
+    // A light illustrative starting portfolio so the dashboard isn't empty on first run.
+    data.portfolio = [
+      mkPolicy({provider:'aia', category:'hosp', product:'AIA HealthShield Gold Max B', sumAssured:150000,
+        monthlyPremium:95, annualPremium:1140, startDate:'2019-03-01', endDate:'', status:'active',
+        owner:'Self', lifeAssured:'Self', riders:['Waiver of Premium'] }),
+      mkPolicy({provider:'pru', category:'life', product:'PRUActive Term (Term Life)', sumAssured:300000,
+        monthlyPremium:62, annualPremium:744, startDate:'2020-06-15', endDate:'2050-06-15', status:'active',
+        owner:'Self', lifeAssured:'Self', riders:[] }),
+      mkPolicy({provider:'ge', category:'ci', product:'Great Eastern Critical illness rider', sumAssured:100000,
+        monthlyPremium:48, annualPremium:576, startDate:'2020-06-15', endDate:'2050-06-15', status:'active',
+        owner:'Self', lifeAssured:'Self', riders:[] }),
+    ];
+  }
+
+  function mkPolicy(p){
+    return {
+      id: Utils.uid('pol'),
+      provider: p.provider||'other',
+      category: p.category||'life',
+      product: p.product||'',
+      coverageAmount: p.coverageAmount!=null?p.coverageAmount:(p.sumAssured||0),
+      sumAssured: p.sumAssured||0,
+      monthlyPremium: p.monthlyPremium||0,
+      annualPremium: p.annualPremium|| (p.monthlyPremium? Math.round(p.monthlyPremium*12): 0),
+      startDate: p.startDate||'',
+      endDate: p.endDate||'',
+      status: p.status||'active', // active | lapsed | expired | archived
+      owner: p.owner||'Self',
+      lifeAssured: p.lifeAssured||'Self',
+      beneficiary: p.beneficiary||'',
+      riders: p.riders||[],
+      waitingPeriod: p.waitingPeriod||'',
+      notes: p.notes||'',
+      createdAt: p.createdAt || Date.now(),
+    };
+  }
+
+  return {
+    get profile(){ return data.profile; },
+    set profile(v){ data.profile = v; persist(); },
+    get portfolio(){ return data.portfolio; },
+    get settings(){ return data.settings; },
+    get activeTab(){ return data.activeTab; },
+    set activeTab(v){ data.activeTab = v; },
+    init, persist, mkPolicy,
+    updateProfile(patch){ data.profile = {...data.profile, ...patch}; persist(); },
+    addPolicy(p){ data.portfolio.push(mkPolicy(p)); persist(); },
+    updatePolicy(id, patch){ const i=data.portfolio.findIndex(x=>x.id===id); if(i>-1){ data.portfolio[i] = {...data.portfolio[i], ...patch}; persist(); } },
+    deletePolicy(id){ data.portfolio = data.portfolio.filter(x=>x.id!==id); persist(); },
+    duplicatePolicy(id){ const p = data.portfolio.find(x=>x.id===id); if(p){ const copy = {...p, id:Utils.uid('pol'), product:p.product+' (copy)'}; data.portfolio.push(copy); persist(); } },
+    archivePolicy(id){ const p = data.portfolio.find(x=>x.id===id); if(p){ p.status = p.status==='archived' ? 'active' : 'archived'; persist(); } },
+    setSetting(k,v){ data.settings[k]=v; persist(); },
+    replaceAll(next){ data = next; persist(); },
+    resetAll(){ data.profile = {...defaultProfile}; data.portfolio = []; persist(); },
+  };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: PortfolioEngine — CRUD helpers, search/sort/filter/group,
+   and portfolio-wide aggregate statistics.
+--------------------------------------------------------------------- */
+const PortfolioEngine = (() => {
+  function activePolicies(list){ return (list||State.portfolio).filter(p=>p.status!=='archived'); }
+  function nonILP(list){ return activePolicies(list).filter(p=>p.category!=='ilp'); }
+
+  function query(opts){
+    opts = opts||{};
+    let list = [...State.portfolio];
+    if(!opts.includeArchived) list = list.filter(p=>p.status!=='archived');
+    if(opts.search){
+      const q = opts.search.toLowerCase();
+      list = list.filter(p => (p.product+' '+DATA.label(p.provider)+' '+p.owner+' '+p.notes).toLowerCase().includes(q));
+    }
+    if(opts.provider && opts.provider!=='all') list = list.filter(p=>p.provider===opts.provider);
+    if(opts.category && opts.category!=='all') list = list.filter(p=>p.category===opts.category);
+    if(opts.status && opts.status!=='all') list = list.filter(p=>p.status===opts.status);
+    const sortKey = opts.sort || 'startDate-desc';
+    const [key, dir] = sortKey.split('-');
+    list.sort((a,b)=>{
+      let av=a[key], bv=b[key];
+      if(key==='startDate'||key==='endDate'){ av = av? new Date(av).getTime():0; bv = bv? new Date(bv).getTime():0; }
+      if(typeof av==='string') av = av.toLowerCase();
+      if(typeof bv==='string') bv = bv.toLowerCase();
+      if(av<bv) return dir==='asc'?-1:1;
+      if(av>bv) return dir==='asc'?1:-1;
+      return 0;
+    });
+    if(opts.groupBy){
+      const groups = Utils.groupBy(list, p => opts.groupBy==='provider' ? DATA.label(p.provider) : (DATA.CATEGORIES.find(c=>c.id===p.category)||{}).label || p.category);
+      return groups;
+    }
+    return list;
+  }
+
+  function totals(){
+    const active = activePolicies();
+    const nonIlpActive = nonILP();
+    const totalAnnual = Utils.sum(active, p=>p.annualPremium);
+    const totalMonthly = Utils.sum(active, p=>p.monthlyPremium);
+    const byCategory = {};
+    DATA.CATEGORIES.forEach(c => byCategory[c.id] = Utils.sum(nonIlpActive.filter(p=>p.category===c.id), p=>p.coverageAmount));
+    const byProvider = {};
+    DATA.PROVIDERS.forEach(pr => byProvider[pr.id] = Utils.sum(active.filter(p=>p.provider===pr.id), p=>p.annualPremium));
+    const riderCount = Utils.sum(active, p => (p.riders||[]).length);
+    return {
+      policyCount: active.length,
+      totalAnnual, totalMonthly, byCategory, byProvider, riderCount,
+      totalCoverage: Utils.sum(nonIlpActive, p=>p.coverageAmount),
+    };
+  }
+
+  function duplicateCategories(){
+    // Categories where more than one active, non-ILP policy exists = potential duplicate coverage
+    const active = nonILP();
+    const byCat = Utils.groupBy(active, p=>p.category);
+    return Object.entries(byCat).filter(([cat, arr]) => arr.length > 1 && ['life','ci','eci','di','hosp','pa','cancer'].includes(cat))
+      .map(([cat, arr]) => ({ category: cat, policies: arr, totalCoverage: Utils.sum(arr, p=>p.coverageAmount) }));
+  }
+
+  function expiringPolicies(withinDays){
+    withinDays = withinDays||90;
+    return activePolicies().filter(p=>{
+      const d = Utils.daysUntil(p.endDate);
+      return d!==null && d >= 0 && d <= withinDays;
+    }).sort((a,b)=> new Date(a.endDate)-new Date(b.endDate));
+  }
+  function expiredPolicies(){
+    return activePolicies().filter(p=>{
+      const d = Utils.daysUntil(p.endDate);
+      return d!==null && d < 0;
+    });
+  }
+
+  function concentrationByProvider(){
+    const t = totals();
+    const totalPrem = t.totalAnnual || 1;
+    return Object.entries(t.byProvider).filter(([,v])=>v>0).map(([id,v])=>({
+      provider:id, name:DATA.label(id), premium:v, pct: v/totalPrem*100,
+    })).sort((a,b)=>b.premium-a.premium);
+  }
+
+  function missingCategories(){
+    const covered = new Set(nonILP().map(p=>p.category));
+    const core = ['life','hosp','ci','di','pa'];
+    return core.filter(c=>!covered.has(c));
+  }
+
+  return { query, totals, duplicateCategories, expiringPolicies, expiredPolicies, concentrationByProvider, missingCategories, activePolicies, nonILP };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: GapEngine — computes recommended coverage per category using
+   generally accepted SG financial-planning heuristics, and compares
+   against current (non-ILP) coverage held in the portfolio.
+   These are educational rules of thumb, not personalised advice.
+--------------------------------------------------------------------- */
+const GapEngine = (() => {
+
+  function recommended(profile){
+    const income = Number(profile.annualIncome)||0;
+    const monthlyIncome = Number(profile.monthlyIncome)|| Math.round(income/12);
+    const dependants = Number(profile.dependants)||0;
+    const hasChildren = Number(profile.children)>0;
+    const mortgage = Number(profile.mortgageBalance)||0;
+    const loans = Number(profile.otherLoans)||0;
+    const netWorth = Number(profile.netWorth)||0;
+
+    // Life insurance: income replacement (10x annual income, common SG rule of thumb)
+    // + outstanding liabilities, less liquid net worth already available.
+    const lifeIncomeMultiple = dependants>0 ? 10 : 5;
+    const lifeNeed = Math.max(0, income*lifeIncomeMultiple + mortgage + loans - (netWorth*0.3));
+
+    // Hospitalisation: recommend Integrated Shield Plan Class A/Private-tier coverage
+    // benchmark, scaling lightly with income.
+    const hospNeed = income > 120000 ? 1500000 : income > 60000 ? 1000000 : 150000; // benchmark annual claim limit tier
+
+    // Critical illness: 4-5x annual income is a common SG guideline to cover
+    // treatment costs + income loss during recovery (~5 years).
+    const ciNeed = income * 4;
+    const eciNeed = income * 2; // early-stage, smaller benchmark layer
+
+    // Disability income: ~75% of monthly income replacement until retirement age (65)
+    const yearsToRetirement = Math.max(1, 65 - (Number(profile.age)||35));
+    const diMonthlyNeed = monthlyIncome*0.75;
+    const diNeed = diMonthlyNeed*12; // expressed as annual benefit for comparison
+
+    // Personal accident: rough multiple of annual income
+    const paNeed = income*3;
+
+    // Mortgage protection: should at least equal outstanding mortgage balance
+    const mortgageNeed = mortgage;
+
+    // Home / contents: rebuild cost heuristic by housing type
+    const homeNeed = profile.housingType==='condo' ? 400000 : profile.housingType==='landed' ? 800000 : 150000;
+    const contentsNeed = profile.housingType==='landed' ? 150000 : profile.housingType==='condo' ? 80000 : 50000;
+
+    // CareShield supplement: flat benchmark daily/monthly payout translated to a lump-sum-equivalent benchmark
+    const careshieldNeed = 400*12*5; // ~$400/mo top-up benchmark over 5 illustrative years
+
+    // Emergency fund: 6 months of expenses (approximated via 60% of monthly income x 6)
+    const emergencyNeed = monthlyIncome*0.6*6;
+
+    return {
+      life: lifeNeed, hosp: hospNeed, ci: ciNeed, eci: eciNeed, di: diNeed, pa: paNeed,
+      mortgage: mortgageNeed, home: homeNeed, contents: contentsNeed, careshield: careshieldNeed,
+      cancer: ciNeed*0.5, emergency: emergencyNeed,
+    };
+  }
+
+  function currentCoverage(){
+    const t = PortfolioEngine.totals();
+    return t.byCategory;
+  }
+
+  function analyse(profile){
+    const rec = recommended(profile);
+    const cur = currentCoverage();
+    const emergencyCurrent = Number(profile.emergencyFund)||0;
+    const rows = [];
+    const catMeta = {
+      life:'Life Insurance', hosp:'Hospitalisation', ci:'Critical Illness', eci:'Early Critical Illness',
+      di:'Disability Income', pa:'Personal Accident', mortgage:'Mortgage Protection', home:'Home Insurance',
+      contents:'Contents Insurance', careshield:'CareShield Life Supplement', cancer:'Cancer Plan',
+    };
+    Object.entries(catMeta).forEach(([id,label])=>{
+      const need = rec[id]||0;
+      const have = cur[id]||0;
+      const pct = need>0 ? Utils.clamp((have/need)*100, 0, 999) : (have>0?100:100);
+      const gap = Math.max(0, need-have);
+      let priority = 'low', risk='low';
+      if(need>0){
+        if(pct < 40){ priority='high'; risk='high'; }
+        else if(pct < 80){ priority='medium'; risk='medium'; }
+        else { priority='low'; risk='low'; }
+      }
+      // Skip mortgage/home priority escalation if user has no mortgage / doesn't own
+      if(id==='mortgage' && need===0){ priority='low'; risk='low'; }
+      rows.push({ id, label, need, have, pct, gap, priority, risk, over: have > need*1.5 && need>0 });
+    });
+    // Emergency fund separately (not a coverage category but part of the analysis)
+    const emergencyNeed = rec.emergency;
+    const emergencyPct = emergencyNeed>0 ? Utils.clamp((emergencyCurrent/emergencyNeed)*100,0,999) : 100;
+    rows.push({ id:'emergency', label:'Emergency Fund', need:emergencyNeed, have:emergencyCurrent,
+      pct:emergencyPct, gap:Math.max(0, emergencyNeed-emergencyCurrent),
+      priority: emergencyPct<50?'high':emergencyPct<100?'medium':'low',
+      risk: emergencyPct<50?'high':emergencyPct<100?'medium':'low', over:false });
+    return rows;
+  }
+
+  return { recommended, currentCoverage, analyse };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: ScoringEngine — Insurance Health Score (0-100) with sub-scores.
+--------------------------------------------------------------------- */
+const ScoringEngine = (() => {
+  function subScoreFromPct(pct){ return Utils.clamp(Math.round(pct), 0, 100); }
+
+  function compute(profile){
+    const rows = GapEngine.analyse(profile);
+    const byId = {}; rows.forEach(r=>byId[r.id]=r);
+
+    const hospScore = subScoreFromPct(byId.hosp.pct);
+    const ciScore = subScoreFromPct((byId.ci.pct + byId.eci.pct)/2);
+    const diScore = subScoreFromPct(byId.di.pct);
+    const mortgageScore = byId.mortgage.need>0 ? subScoreFromPct(byId.mortgage.pct) : 100;
+    const dependantScore = subScoreFromPct(byId.life.pct);
+
+    // Portfolio diversification: how many of the core categories are covered at all
+    const coreCats = ['life','hosp','ci','di','pa'];
+    const coveredCore = coreCats.filter(c => (byId[c] && byId[c].have>0)).length;
+    const diversificationScore = Math.round((coveredCore/coreCats.length)*100);
+
+    // Premium efficiency: penalise duplicate coverage & premium concentration in one insurer
+    const dupes = PortfolioEngine.duplicateCategories();
+    const concentration = PortfolioEngine.concentrationByProvider();
+    let efficiency = 100;
+    efficiency -= dupes.length*12;
+    if(concentration[0] && concentration[0].pct > 80) efficiency -= 15;
+    const t = PortfolioEngine.totals();
+    if(t.totalAnnual > 0 && Number(profile.annualIncome) > 0){
+      const ratio = t.totalAnnual/Number(profile.annualIncome);
+      if(ratio > 0.15) efficiency -= 15; // premiums >15% of income flagged
+    }
+    efficiency = Utils.clamp(efficiency, 0, 100);
+
+    // Protection score: average of hosp/ci/di/life/pa pct capped
+    const protectionScore = Math.round(['life','hosp','ci','di','pa'].reduce((s,id)=>s+subScoreFromPct(byId[id].pct),0)/5);
+
+    const weights = { protectionScore:0.24, diversificationScore:0.14, dependantScore:0.14,
+      hospScore:0.14, ciScore:0.12, diScore:0.10, mortgageScore:0.06, efficiency:0.06 };
+    const scores = { protectionScore, diversificationScore, dependantScore, hospScore, ciScore, diScore, mortgageScore, efficiency };
+    let overall = 0;
+    Object.entries(weights).forEach(([k,w])=> overall += (scores[k]||0)*w );
+    overall = Math.round(Utils.clamp(overall,0,100));
+
+    let grade = 'F';
+    if(overall>=90) grade='A+'; else if(overall>=85) grade='A'; else if(overall>=80) grade='A-';
+    else if(overall>=75) grade='B+'; else if(overall>=70) grade='B'; else if(overall>=65) grade='B-';
+    else if(overall>=58) grade='C+'; else if(overall>=50) grade='C'; else if(overall>=40) grade='D';
+    else grade='F';
+
+    return { overall, grade, ...scores };
+  }
+  return { compute };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: InsightsEngine — rule-based, personalised insights (30+ rules).
+   Each rule is evaluated against profile + portfolio + gap analysis and
+   only surfaces when its condition is met.
+--------------------------------------------------------------------- */
+const InsightsEngine = (() => {
+  function generate(profile){
+    const rows = GapEngine.analyse(profile);
+    const byId = {}; rows.forEach(r=>byId[r.id]=r);
+    const t = PortfolioEngine.totals();
+    const dupes = PortfolioEngine.duplicateCategories();
+    const expiring = PortfolioEngine.expiringPolicies(90);
+    const expired = PortfolioEngine.expiredPolicies();
+    const missing = PortfolioEngine.missingCategories();
+    const concentration = PortfolioEngine.concentrationByProvider();
+    const score = ScoringEngine.compute(profile);
+    const ilps = State.portfolio.filter(p=>p.category==='ilp' && p.status!=='archived');
+    const insights = [];
+    const add = (type, text, tag) => insights.push({ type, text, tag: tag||type });
+
+    // --- Hospitalisation ---
+    if(byId.hosp.pct >= 90) add('good', 'Your hospitalisation coverage appears adequate for a Class A / Private ward benchmark.', 'Hospitalisation');
+    if(byId.hosp.pct < 90 && byId.hosp.have>0) add('warn', 'Your Integrated Shield Plan coverage is below the benchmark for your income tier \u2014 review your plan\u2019s annual claim limit and ward class.', 'Hospitalisation');
+    if(byId.hosp.have===0) add('bad', 'You have no hospitalisation (Integrated Shield Plan) coverage on file \u2014 this is usually the first protection priority in Singapore.', 'Hospitalisation');
+
+    // --- Critical illness ---
+    if(byId.ci.pct >= 80) add('good', 'Your critical illness coverage is broadly in line with the 4x-income guideline.', 'Critical Illness');
+    if(byId.ci.pct < 50 && byId.ci.have>0) add('warn', 'Your critical illness coverage may fall short of covering ~5 years of income during treatment and recovery.', 'Critical Illness');
+    if(byId.ci.have===0) add('bad', 'You have no critical illness coverage \u2014 a CI diagnosis without coverage can force early liquidation of savings or CPF.', 'Critical Illness');
+    if(byId.eci.have===0 && byId.ci.have>0) add('info', 'You hold critical illness coverage but no early-stage (early CI) rider \u2014 many real-world claims occur at earlier stages.', 'Critical Illness');
+
+    // --- Disability income ---
+    if(byId.di.have===0) add('bad', 'You have no disability income protection \u2014 a long-term disability could remove your income while expenses continue.', 'Disability Income');
+    if(byId.di.pct>0 && byId.di.pct<60) add('warn', 'Your disability income protection appears insufficient to replace ~75% of your monthly income.', 'Disability Income');
+    if(byId.di.pct>=60) add('good', 'Your disability income protection is trending toward the recommended income-replacement benchmark.', 'Disability Income');
+
+    // --- Life insurance ---
+    if(byId.life.have===0 && Number(profile.dependants)>0) add('bad', 'You have dependants but no life insurance on file \u2014 this is typically the highest-priority gap for a household with dependants.', 'Life Insurance');
+    if(byId.life.pct>0 && byId.life.pct<70 && Number(profile.dependants)>0) add('warn', 'Your life coverage may not fully replace lost income for your dependants \u2014 consider the 10x-income guideline.', 'Life Insurance');
+    if(byId.life.pct>=100) add('good', 'Your life insurance coverage meets or exceeds the income-replacement benchmark for your household.', 'Life Insurance');
+    if(Number(profile.mortgageBalance)>0 && byId.life.have < Number(profile.mortgageBalance)) add('warn', 'Your mortgage balance exceeds your total life insurance coverage \u2014 your family may not be able to fully redeem the home if something happens to you.', 'Mortgage');
+
+    // --- Mortgage protection ---
+    if(Number(profile.mortgageBalance)>0 && byId.mortgage.have===0) add('bad', 'You have an outstanding mortgage but no dedicated mortgage protection policy on file.', 'Mortgage');
+    if(Number(profile.mortgageBalance)>0 && byId.mortgage.pct>=100) add('good', 'Your mortgage protection coverage is at or above your outstanding loan balance.', 'Mortgage');
+
+    // --- Personal accident ---
+    if(byId.pa.have===0) add('info', 'You have no personal accident coverage \u2014 a low-cost layer worth considering for accidental injury or death.', 'Personal Accident');
+
+    // --- Home & contents ---
+    if(profile.housingType!=='hdb' && byId.home.have===0) add('info', 'As a private property owner, you may want to review fire/structure insurance \u2014 mortgagee banks often require it.', 'Home');
+    if(byId.contents.have===0) add('info', 'You have no contents insurance recorded \u2014 worth considering to protect renovation and belongings against fire, theft or water damage.', 'Home');
+
+    // --- CareShield / eldercare ---
+    if(Number(profile.age)>=30 && byId.careshield.have===0) add('info', 'You have no CareShield Life supplement on file \u2014 worth reviewing as long-term care costs can be substantial in later life.', 'Eldercare');
+
+    // --- Emergency fund ---
+    if(byId.emergency.pct<50) add('bad', 'Your emergency fund covers less than 3 months of expenses \u2014 below the commonly recommended 6-month buffer.', 'Emergency Fund');
+    else if(byId.emergency.pct<100) add('warn', 'Your emergency fund is below the typical 6-month expense buffer.', 'Emergency Fund');
+    else add('good', 'Your emergency fund meets the commonly recommended 6-month expense buffer.', 'Emergency Fund');
+
+    // --- Duplicates & overlaps ---
+    dupes.forEach(d=>{
+      const catLabel = (DATA.CATEGORIES.find(c=>c.id===d.category)||{}).label || d.category;
+      add('warn', `You hold ${d.policies.length} separate ${catLabel} policies \u2014 review for overlapping coverage and whether all premiums are still necessary.`, 'Duplicate Coverage');
+    });
+    if(dupes.length===0) add('good', 'No obvious duplicate coverage detected across your critical illness, life, disability, hospitalisation, PA or cancer categories.', 'Duplicate Coverage');
+
+    // --- Over-insurance ---
+    rows.filter(r=>r.over).forEach(r=> add('info', `Your ${r.label} coverage is significantly above the typical benchmark \u2014 confirm this level is intentional rather than a result of overlapping policies.`, 'Over-insurance'));
+
+    // --- Missing categories ---
+    if(missing.length>0){
+      const labels = missing.map(m=>(DATA.CATEGORIES.find(c=>c.id===m)||{}).label).join(', ');
+      add('bad', `Core protection categories with no coverage at all: ${labels}.`, 'Coverage Gaps');
+    }
+
+    // --- Expiring / expired ---
+    if(expired.length>0) add('bad', `${expired.length} polic${expired.length===1?'y has':'ies have'} already passed its end date \u2014 check if renewal or replacement is needed.`, 'Policy Expiry');
+    if(expiring.length>0) add('warn', `${expiring.length} polic${expiring.length===1?'y is':'ies are'} expiring within 90 days \u2014 review renewal terms ahead of the deadline.`, 'Policy Expiry');
+    if(expired.length===0 && expiring.length===0 && State.portfolio.length>0) add('good', 'No policies are expired or expiring within the next 90 days.', 'Policy Expiry');
+
+    // --- Premium concentration ---
+    if(concentration[0] && concentration[0].pct>75) add('warn', `${concentration[0].pct.toFixed(0)}% of your annual premiums sit with a single insurer (${concentration[0].name}) \u2014 concentration risk is worth understanding, though not necessarily a problem.`, 'Concentration');
+    if(t.totalAnnual>0 && Number(profile.annualIncome)>0){
+      const ratio = t.totalAnnual/Number(profile.annualIncome)*100;
+      if(ratio>15) add('warn', `Total insurance premiums are ${ratio.toFixed(1)}% of your annual income \u2014 above the commonly cited 10\u201315% guideline.`, 'Premium Efficiency');
+      else add('good', `Total insurance premiums are a reasonable ${ratio.toFixed(1)}% of your annual income.`, 'Premium Efficiency');
+    }
+
+    // --- Riders ---
+    const riderNames = State.portfolio.flatMap(p=>p.riders||[]);
+    const riderCounts = {};
+    riderNames.forEach(r=> riderCounts[r] = (riderCounts[r]||0)+1);
+    Object.entries(riderCounts).filter(([,c])=>c>1).forEach(([name,c])=> add('info', `You have "${name}" attached on ${c} separate policies \u2014 check whether this overlap is intentional.`, 'Riders'));
+    if(State.portfolio.some(p=>p.status!=='archived' && (p.riders||[]).length===0 && p.category==='hosp')) add('info', 'At least one hospitalisation plan has no riders attached \u2014 review whether a co-payment rider suits your risk appetite.', 'Riders');
+
+    // --- Life stage specific ---
+    if(profile.maritalStatus==='married' && Number(profile.children)===0) add('info', 'As a married couple without children yet, this is a good time to review coverage before life events like a first child increase protection needs.', 'Life Stage');
+    if(Number(profile.children)>0){
+      const childRider = State.portfolio.some(p=> (p.riders||[]).some(r=>/child|payor/i.test(r)));
+      if(!childRider) add('info', 'You have children but no Payor Benefit or Children Rider detected \u2014 consider whether your policies would stay in force if you were unable to pay premiums.', 'Family Protection');
+    }
+    if(profile.employmentType==='self-employed') add('info', 'As a self-employed individual, you do not have employer-provided group hospitalisation or group term life \u2014 personal coverage carries more weight for you.', 'Employment');
+    if(profile.employmentType==='employee') add('info', 'As an employee, check whether your employer\u2019s group insurance already covers part of your hospitalisation or life needs before assuming a full personal-policy gap.', 'Employment');
+    if(Number(profile.age)>=50) add('info', 'As you approach retirement age, consider whether term coverage still matches your horizon, and whether CareShield / long-term-care planning should increase in priority.', 'Life Stage');
+    if(Number(profile.age)<30 && byId.ci.have>0) add('good', 'Starting critical illness and hospitalisation coverage early typically locks in lower premiums before health changes affect insurability.', 'Life Stage');
+
+    // --- ILP note ---
+    if(ilps.length>0) add('info', `You have ${ilps.length} Investment-Linked Polic${ilps.length===1?'y':'ies'} recorded \u2014 these are excluded from the gap analysis and recommendations since ILPs combine insurance with investment risk and are outside this tool\u2019s protection-focused scope.`, 'ILP Note');
+
+    // --- Score-based summary ---
+    if(score.overall>=80) add('good', `Your overall Insurance Health Score of ${score.overall} (${score.grade}) reflects a well-rounded protection portfolio.`, 'Overall');
+    else if(score.overall>=60) add('warn', `Your overall Insurance Health Score of ${score.overall} (${score.grade}) suggests moderate gaps worth addressing.`, 'Overall');
+    else add('bad', `Your overall Insurance Health Score of ${score.overall} (${score.grade}) suggests significant protection gaps.`, 'Overall');
+
+    if(State.portfolio.filter(p=>p.status!=='archived').length===0) add('info', 'Your portfolio is empty \u2014 add your existing policies to unlock personalised gap analysis and insights.', 'Getting Started');
+
+    return insights;
+  }
+  return { generate };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: ScenarioEngine — life-event scenario planner
+--------------------------------------------------------------------- */
+const ScenarioEngine = (() => {
+  const SCENARIOS = [
+    { id:'marriage', label:'Getting Married', desc:'Combine finances and plan for a spouse\u2019s financial dependency.',
+      apply:(p)=>({ ...p, maritalStatus:'married', dependants:Math.max(p.dependants,1) }) },
+    { id:'newchild', label:'Having a New Child', desc:'A new dependant increases life, CI and disability income needs.',
+      apply:(p)=>({ ...p, children:p.children+1, dependants:p.dependants+1 }) },
+    { id:'hdb', label:'Buying an HDB Flat', desc:'Taking on a housing loan introduces mortgage protection needs.',
+      apply:(p)=>({ ...p, housingType:'hdb', mortgageBalance:p.mortgageBalance + 300000 }) },
+    { id:'condo', label:'Buying a Condo', desc:'A larger private-property loan raises mortgage and home insurance needs.',
+      apply:(p)=>({ ...p, housingType:'condo', mortgageBalance:p.mortgageBalance + 900000 }) },
+    { id:'payrise', label:'Salary Increase', desc:'Higher income raises income-replacement benchmarks for life, CI and disability cover.',
+      apply:(p)=>({ ...p, annualIncome:Math.round(p.annualIncome*1.25), monthlyIncome:Math.round(p.monthlyIncome*1.25) }) },
+    { id:'career', label:'Career Change', desc:'A change in employer may affect group insurance coverage you previously relied on.',
+      apply:(p)=>({ ...p }) },
+    { id:'selfemployed', label:'Becoming Self-Employed', desc:'Losing employer group coverage increases reliance on personal policies.',
+      apply:(p)=>({ ...p, employmentType:'self-employed' }) },
+    { id:'retirement', label:'Approaching Retirement', desc:'Protection needs shift from income replacement toward healthcare and long-term care.',
+      apply:(p)=>({ ...p, age:Math.max(p.age,60), annualIncome:Math.round(p.annualIncome*0.5) }) },
+  ];
+  function run(scenarioId, profile){
+    const sc = SCENARIOS.find(s=>s.id===scenarioId);
+    if(!sc) return null;
+    const before = { profile, score:ScoringEngine.compute(profile), gaps:GapEngine.analyse(profile) };
+    const nextProfile = sc.apply({...profile});
+    const after = { profile:nextProfile, score:ScoringEngine.compute(nextProfile), gaps:GapEngine.analyse(nextProfile) };
+    return { scenario:sc, before, after };
+  }
+  return { SCENARIOS, run };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: Charts — SVG builders (no external chart libraries).
+--------------------------------------------------------------------- */
+const Charts = (() => {
+  const PALETTE = ['#1F7A5C','#3A6EA5','#B8873A','#AE4A3B','#7A5FB0','#2D9CDB','#5C8A6E','#C46B3E'];
+
+  function svgOpen(w,h,extra){ return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" xmlns="http://www.w3.org/2000/svg" ${extra||''}>`; }
+
+  // Donut / wheel: array of {label, value, color}
+  function donut(items, opts){
+    opts = opts||{};
+    const size = opts.size||220, stroke = opts.stroke||26, r=(size-stroke)/2, cx=size/2, cy=size/2;
+    const total = Utils.sum(items, i=>i.value) || 1;
+    let angle = -90;
+    const circ = 2*Math.PI*r;
+    let paths = '';
+    items.forEach((it,idx)=>{
+      const frac = it.value/total;
+      const dash = circ*frac;
+      const color = it.color || PALETTE[idx%PALETTE.length];
+      paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
+        stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-(angle+90)/360*circ}"
+        transform="rotate(${angle} ${cx} ${cy})" stroke-linecap="butt"><title>${Utils.escapeHtml(it.label)}: ${Utils.fmtMoney(it.value)}</title></circle>`;
+      angle += frac*360;
+    });
+    const centerLabel = opts.centerLabel||'';
+    const centerSub = opts.centerSub||'';
+    return `${svgOpen(size,size)}
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--line, #eee)" stroke-width="${stroke}" opacity=".35"/>
+      ${paths}
+      ${centerLabel? `<text x="${cx}" y="${cy-2}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="20" font-weight="600" fill="currentColor">${Utils.escapeHtml(centerLabel)}</text>`:''}
+      ${centerSub? `<text x="${cx}" y="${cy+18}" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" fill="currentColor" opacity=".55">${Utils.escapeHtml(centerSub)}</text>`:''}
+    </svg>`;
+  }
+
+  function legend(items){
+    const total = Utils.sum(items, i=>i.value) || 1;
+    return `<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">` + items.map((it,idx)=>{
+      const color = it.color || PALETTE[idx%PALETTE.length];
+      const pct = (it.value/total*100).toFixed(0);
+      return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+        <span style="width:9px;height:9px;border-radius:3px;background:${color};flex-shrink:0;"></span>
+        <span style="flex:1;color:var(--text-soft);">${Utils.escapeHtml(it.label)}</span>
+        <span class="mono" style="font-weight:600;">${Utils.fmtMoney(it.value,{abbr:true})}</span>
+        <span class="mono" style="color:var(--text-faint);width:34px;text-align:right;">${pct}%</span>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+
+  // Horizontal bar chart
+  function hbar(items, opts){
+    opts = opts||{};
+    const w = opts.w||560, rowH = 34, gap=10, padL=140;
+    const h = items.length*(rowH+gap)+10;
+    const max = Math.max(1, ...items.map(i=>i.value));
+    let bars = '';
+    items.forEach((it,idx)=>{
+      const y = idx*(rowH+gap)+6;
+      const bw = Math.max(2, (it.value/max)*(w-padL-60));
+      const color = it.color||PALETTE[idx%PALETTE.length];
+      bars += `<text x="0" y="${y+rowH/2+4}" font-size="12" fill="currentColor" font-family="Inter, sans-serif">${Utils.escapeHtml(it.label)}</text>
+        <rect x="${padL}" y="${y+4}" width="${w-padL-60}" height="${rowH-8}" rx="7" fill="currentColor" opacity=".08"/>
+        <rect x="${padL}" y="${y+4}" width="${bw}" height="${rowH-8}" rx="7" fill="${color}"/>
+        <text x="${padL + Math.max(bw,0)+8}" y="${y+rowH/2+4}" font-size="12" font-family="IBM Plex Mono, monospace" fill="currentColor" opacity=".8">${Utils.fmtMoney(it.value,{abbr:true})}</text>`;
+    });
+    return `${svgOpen(w,h)}${bars}</svg>`;
+  }
+
+  // Protection pyramid (5 tiers, filled proportionally to coverage pct)
+  function pyramid(tiers){
+    // tiers: [{label, pct}] bottom->top order expected
+    const w=560, h=260, levels=tiers.length, levelH = (h-20)/levels;
+    let shapes='';
+    tiers.forEach((t,i)=>{
+      const topWidth = w*0.15 + (w*0.8)*(i/(levels-1||1));
+      const y = h-20-(i+1)*levelH;
+      const xOff = (w-topWidth)/2;
+      const fillPct = Utils.clamp(t.pct,0,100)/100;
+      const color = t.pct>=80 ? 'var(--emerald,#1F7A5C)' : t.pct>=40 ? 'var(--amber,#B8873A)' : 'var(--brick,#AE4A3B)';
+      shapes += `<g>
+        <rect x="${xOff}" y="${y}" width="${topWidth}" height="${levelH-6}" rx="8" fill="currentColor" opacity=".07"/>
+        <rect x="${xOff}" y="${y}" width="${topWidth*fillPct}" height="${levelH-6}" rx="8" fill="${color}" opacity=".85"/>
+        <text x="${w/2}" y="${y+levelH/2-2}" text-anchor="middle" font-size="12.5" font-weight="600" font-family="Inter, sans-serif" fill="currentColor">${Utils.escapeHtml(t.label)}</text>
+        <text x="${w/2}" y="${y+levelH/2+13}" text-anchor="middle" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="currentColor" opacity=".6">${Math.round(t.pct)}% funded</text>
+      </g>`;
+    });
+    return `${svgOpen(w,h)}${shapes}</svg>`;
+  }
+
+  // Gauge (semi-circle) for health score
+  function gauge(value, max){
+    max = max||100;
+    const w=260,h=160,cx=130,cy=140,r=110;
+    const frac = Utils.clamp(value/max,0,1);
+    const startAngle=180, endAngle=0;
+    const angle = startAngle + (endAngle-startAngle)*frac;
+    function polar(cx,cy,r,ang){ const rad=(ang*Math.PI)/180; return [cx+r*Math.cos(rad), cy-r*Math.sin(rad)]; }
+    const [sx,sy] = polar(cx,cy,r,180);
+    const [ex,ey] = polar(cx,cy,r,0);
+    const [nx,ny] = polar(cx,cy,r,angle);
+    const color = value>=80?'var(--emerald,#1F7A5C)':value>=60?'var(--amber,#B8873A)':'var(--brick,#AE4A3B)';
+    const largeArc = frac>0.5?1:1;
+    return `${svgOpen(w,h)}
+      <path d="M ${sx} ${sy} A ${r} ${r} 0 1 1 ${ex} ${ey}" fill="none" stroke="currentColor" opacity=".1" stroke-width="18" stroke-linecap="round"/>
+      <path d="M ${sx} ${sy} A ${r} ${r} 0 ${frac>0.5?1:0} 1 ${nx} ${ny}" fill="none" stroke="${color}" stroke-width="18" stroke-linecap="round"/>
+      <text x="${cx}" y="${cy-16}" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="34" font-weight="700" fill="currentColor">${Math.round(value)}</text>
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="currentColor" opacity=".55">out of ${max}</text>
+    </svg>`;
+  }
+
+  // Timeline of policy end dates
+  function timeline(policies){
+    const w=640, rowH=38, h = Math.max(80, policies.length*rowH+30);
+    const now = Date.now();
+    const dated = policies.filter(p=>p.endDate);
+    if(dated.length===0) return `<div class="help-text">No policies with end dates to plot.</div>`;
+    const times = dated.map(p=>new Date(p.endDate).getTime());
+    const minT = Math.min(now, ...times), maxT = Math.max(now, ...times);
+    const span = Math.max(1, maxT-minT);
+    const padL=170, padR=40;
+    function x(t){ return padL + ((t-minT)/span)*(w-padL-padR); }
+    const nowX = x(now);
+    let rows = dated.map((p,idx)=>{
+      const y = 20+idx*rowH;
+      const px = x(new Date(p.endDate).getTime());
+      const daysLeft = Utils.daysUntil(p.endDate);
+      const color = daysLeft<0 ? 'var(--brick,#AE4A3B)' : daysLeft<=90 ? 'var(--amber,#B8873A)' : 'var(--emerald,#1F7A5C)';
+      return `<text x="0" y="${y+5}" font-size="11.5" font-family="Inter, sans-serif" fill="currentColor">${Utils.escapeHtml((p.product||'').slice(0,22))}</text>
+        <line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="currentColor" opacity=".06"/>
+        <circle cx="${px}" cy="${y}" r="6" fill="${color}"/>
+        <text x="${px}" y="${y-10}" font-size="10" text-anchor="middle" font-family="IBM Plex Mono, monospace" fill="currentColor" opacity=".7">${Utils.fmtDate(p.endDate)}</text>`;
+    }).join('');
+    return `${svgOpen(w,h)}
+      <line x1="${nowX}" y1="10" x2="${nowX}" y2="${h-10}" stroke="var(--emerald,#1F7A5C)" stroke-width="2" stroke-dasharray="3 3"/>
+      <text x="${nowX}" y="${h-2}" font-size="10" text-anchor="middle" fill="var(--emerald,#1F7A5C)" font-family="IBM Plex Mono, monospace">TODAY</text>
+      ${rows}
+    </svg>`;
+  }
+
+  // Risk matrix: priority(x: low/med/high) vs categories(y)
+  function riskMatrix(rows){
+    const w=560, cellW=(w-160)/3, rowH=34, h=rows.length*rowH+40, padL=160;
+    const cols = ['low','medium','high'];
+    let head = cols.map((c,i)=>`<text x="${padL+i*cellW+cellW/2}" y="18" text-anchor="middle" font-size="10.5" font-family="Inter, sans-serif" fill="currentColor" opacity=".6" text-transform="uppercase">${c.toUpperCase()}</text>`).join('');
+    let body = rows.map((r,ri)=>{
+      const y = 30+ri*rowH;
+      const label = `<text x="0" y="${y+rowH/2+4}" font-size="11.5" font-family="Inter, sans-serif" fill="currentColor">${Utils.escapeHtml(r.label)}</text>`;
+      const cells = cols.map((c,ci)=>{
+        const active = r.risk===c;
+        const color = c==='high'?'var(--brick,#AE4A3B)':c==='medium'?'var(--amber,#B8873A)':'var(--emerald,#1F7A5C)';
+        return `<rect x="${padL+ci*cellW+4}" y="${y+3}" width="${cellW-8}" height="${rowH-10}" rx="8"
+          fill="${active?color:'currentColor'}" opacity="${active?0.85:0.06}"/>`;
+      }).join('');
+      return label+cells;
+    }).join('');
+    return `${svgOpen(w,h)}${head}${body}</svg>`;
+  }
+
+  return { donut, legend, hbar, pyramid, gauge, timeline, riskMatrix, PALETTE };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: FAQ content
+--------------------------------------------------------------------- */
+const FAQ = [
+  { q:'What is insurance, really?', a:'Insurance is a way to transfer a large, unpredictable financial risk (like a major illness, disability, or death) to an insurer in exchange for a smaller, predictable premium. You are not "investing" in protection-only insurance \u2014 you are paying for the peace of mind that a rare, expensive event will not derail your finances.' },
+  { q:'What is an Integrated Shield Plan (ISP)?', a:'An ISP sits on top of MediShield Life, Singapore\u2019s basic national hospitalisation scheme, and extends coverage to higher ward classes (Class A) or private hospitals. Several private insurers are approved by MOH to offer ISPs, and premiums can typically be paid fully or partly via MediSave up to prevailing withdrawal limits. Since April 2021, new ISP riders must include a minimum 5% co-payment by the policyholder.' },
+  { q:'Term life vs whole life \u2014 what\u2019s the difference?', a:'Term life covers you for a fixed period (e.g. until age 65) and pays out only if a claim event occurs within that term \u2014 premiums are usually much lower for the same coverage. Whole life covers you for life and typically includes a savings/cash-value component, which usually means significantly higher premiums for the same death benefit. Many financial planners suggest using low-cost term insurance to cover large, time-bound needs (like income replacement or a mortgage) and evaluating whole life separately as a savings/legacy tool.' },
+  { q:'What is critical illness (CI) coverage?', a:'CI insurance pays a lump sum if you are diagnosed with a covered severe illness (e.g. certain cancers, heart attack, stroke) as defined by the policy, regardless of actual medical costs incurred. It is designed to replace income during treatment/recovery and cover expenses not reimbursed by hospitalisation plans.' },
+  { q:'What is Early Critical Illness (ECI) coverage?', a:'Standard CI definitions often only pay out at an advanced/late stage of an illness. Early CI riders extend payouts to earlier or intermediate stages of defined conditions, which is when many real-world diagnoses actually occur \u2014 closing a common gap in traditional CI-only coverage.' },
+  { q:'What is Disability Income insurance?', a:'Disability Income insurance replaces a portion of your monthly income (commonly benchmarked around 75%) if you become unable to work due to illness or injury. It is frequently under-owned in Singapore relative to CI or life insurance, despite the fact that a long-term disability can be financially more damaging than death, since expenses continue without income.' },
+  { q:'What is CareShield Life and do I need a supplement?', a:'CareShield Life is a national long-term care insurance scheme providing a monthly cash payout if you become severely disabled, for as long as needed. Private insurers offer CareShield Life Supplements that top up this payout, since the base scheme\u2019s payout alone may not cover the full cost of professional caregiving in Singapore.' },
+  { q:'What are Integrated Shield Plan riders?', a:'Riders attach to an ISP to reduce your co-insurance/deductible, so you pay less cash out-of-pocket during a claim. Since 2021, MOH requires all new riders to retain a minimum 5% co-payment by the policyholder, to guard against overconsumption of healthcare.' },
+  { q:'What is mortgage protection insurance?', a:'Mortgage protection (sometimes structured as a decreasing term policy) pays out a sum that reduces roughly in line with your outstanding home loan, so that your family can redeem or continue servicing the property if you pass away or become disabled during the loan tenure.' },
+  { q:'Do I need home insurance if I live in an HDB flat?', a:'HDB owners with a housing loan are usually required to maintain fire insurance on the building structure. Contents insurance (covering renovation, furniture, and belongings) is separate and optional, but often worthwhile given renovation costs in Singapore.' },
+  { q:'What is Personal Accident (PA) insurance?', a:'PA insurance pays a benefit for accidental death, dismemberment, or injury \u2014 regardless of the cause being an illness. It is typically inexpensive and can complement (not replace) life and disability coverage, since it does not cover illness-related claims.' },
+  { q:'How large should my emergency fund be?', a:'A commonly cited guideline is 3\u20136 months of essential expenses held in an easily accessible account, before considering longer-term investments or additional insurance. This buffer helps you avoid lapsing policies or liquidating investments at a bad time if you face a temporary income disruption.' },
+  { q:'What insurance should new parents prioritise?', a:'New parents often see a jump in life, critical illness, and disability income needs, since a child extends the number of years of financial dependency. Reviewing beneficiary designations and adding a Payor Benefit or Children\u2019s Rider (which keeps a child\u2019s policy in force if the paying parent cannot pay) is also common at this stage.' },
+  { q:'What insurance is relevant for children?', a:'Parents sometimes insure children with a modest hospitalisation plan and a basic CI/PA rider, given the relatively low cost at a young age and the ability to lock in insurability before any health conditions arise. Large death-benefit coverage on children is generally unnecessary since children are not income earners.' },
+  { q:'Why does this tool exclude Investment-Linked Policies (ILPs) from recommendations?', a:'ILPs combine insurance protection with investment exposure, meaning the death/CI benefit and the cash value can both fluctuate with market performance and fees. Because this tool focuses purely on protection adequacy, ILPs are recorded separately if you already own one, but are excluded from coverage recommendations and gap-analysis math to avoid conflating protection with investment performance.' },
+  { q:'Is this app selling me insurance?', a:'No. This tool is strictly educational. It does not sell products, does not favour any insurer, and does not earn commissions. All figures are drawn from your own inputs and are compared against commonly cited, publicly available financial-planning guidelines \u2014 always confirm details directly with a licensed insurer or a financial adviser before making decisions.' },
+];
+
+/* ---------------------------------------------------------------------
+   MODULE: UI — navigation, theming, modal, toast plumbing.
+--------------------------------------------------------------------- */
+const NAV = [
+  { group:'Overview', items:[
+    { id:'dashboard', label:'Dashboard', icon:'grid' },
+    { id:'profile', label:'My Profile', icon:'user' },
+  ]},
+  { group:'Portfolio', items:[
+    { id:'portfolio', label:'My Insurance Portfolio', icon:'folder' },
+    { id:'gaps', label:'Gap Analysis', icon:'target' },
+    { id:'score', label:'Health Score', icon:'shield' },
+  ]},
+  { group:'Plan Ahead', items:[
+    { id:'insights', label:'Smart Insights', icon:'bulb' },
+    { id:'scenarios', label:'Scenario Planner', icon:'route' },
+    { id:'visuals', label:'Visualisations', icon:'chart' },
+  ]},
+  { group:'Resources', items:[
+    { id:'faq', label:'Learn / FAQ', icon:'book' },
+    { id:'export', label:'Export & Settings', icon:'export' },
+  ]},
+];
+
+const ICONS = {
+  grid:'<path d="M3 3h6v6H3zM11 3h6v6h-6zM3 11h6v6H3zM11 11h6v6h-6z" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+  user:'<circle cx="10" cy="7" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 17c1.2-3.5 4-5 6.5-5s5.3 1.5 6.5 5" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+  folder:'<path d="M2.5 5.5h5l2 2h8v8a1 1 0 01-1 1h-13a1 1 0 01-1-1v-9a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+  target:'<circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="0.9" fill="currentColor"/>',
+  shield:'<path d="M10 2.5l6.5 2.3v5c0 4.4-2.8 7.6-6.5 8.7-3.7-1.1-6.5-4.3-6.5-8.7v-5z" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+  bulb:'<path d="M7 15h6M8 17.5h4M6 10.5A4 4 0 1114 10.5c0 2-1.2 2.8-1.7 3.9-.3.6-.3 1-.3 1.1H8c0-.1 0-.5-.3-1.1C7.2 13.3 6 12.5 6 10.5z" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+  route:'<circle cx="5" cy="5" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="15" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.8 6.2C9 8 6 11 8.5 13" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.2 13.8L13 13" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+  chart:'<path d="M3 17V9M9 17V3M15 17v-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  book:'<path d="M3 4.5S5 3.5 7 3.5s4 1 4 1v11s-2-1-4-1-4 1-4 1v-11zM11 4.5s2-1 4-1 4 1 4 1v11s-2-1-4-1-4 1-4 1v-11z" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+  export:'<path d="M10 12.5V3M6.5 6.5L10 3l3.5 3.5M4 13v2.5a1 1 0 001 1h10a1 1 0 001-1V13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  plus:'<path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  edit:'<path d="M13.5 3.5l3 3-9.5 9.5H4v-3l9.5-9.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+  trash:'<path d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M6 6l.7 9.5a1 1 0 001 .9h4.6a1 1 0 001-.9L14 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+  copy:'<rect x="7" y="7" width="9" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 13V5a1.5 1.5 0 011.5-1.5H13" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+  archive:'<rect x="3" y="4" width="14" height="3.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 7.5V15a1 1 0 001 1h9a1 1 0 001-1V7.5M8 11h4" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+  warn:'<path d="M10 3l8 14H2l8-14z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 8.5v3.5M10 14.5v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  check:'<path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  info:'<circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 9v5M10 6.5v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  x:'<path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+};
+function icon(name, size){ return `<svg viewBox="0 0 20 20" width="${size||16}" height="${size||16}">${ICONS[name]||''}</svg>`; }
+
+/* ---------------------------------------------------------------------
+   MODULE: UI — shell chrome (nav, theme, sidebar, toast, modal)
+--------------------------------------------------------------------- */
+const UI = (() => {
+  const titles = {
+    dashboard:['Dashboard','Your protection, at a glance'],
+    profile:['My Profile','Tell us about your finances to power the gap analysis'],
+    portfolio:['My Insurance Portfolio','Every policy you own, in one place'],
+    gaps:['Gap Analysis','Recommended vs. current coverage, by category'],
+    score:['Insurance Health Score','A composite view of how well-protected you are'],
+    insights:['Smart Insights','Personalised, rule-based observations about your portfolio'],
+    scenarios:['Scenario Planner','See how life events change your protection needs'],
+    visuals:['Visualisations','Your portfolio, charted'],
+    faq:['Learn / FAQ','Plain-English explanations of common SG insurance terms'],
+    export:['Export & Settings','Back up your data or start fresh'],
+  };
+
+  function renderNav(){
+    const el = document.getElementById('navList');
+    el.innerHTML = NAV.map(g => `
+      <div class="nav-group-label">${g.group}</div>
+      ${g.items.map(it => `
+        <button class="nav-item ${State.activeTab===it.id?'active':''}" onclick="UI.navigate('${it.id}')">
+          ${icon(it.icon,17)}<span>${it.label}</span>
+        </button>`).join('')}
+    `).join('');
+  }
+
+  function navigate(tab){
+    State.activeTab = tab;
+    document.getElementById('topbarTitle').textContent = titles[tab][0];
+    document.getElementById('topbarSub').textContent = titles[tab][1];
+    renderNav();
+    closeSidebar();
+    Views.render(tab);
+    document.getElementById('content').scrollTo?.(0,0);
+    window.scrollTo(0,0);
+    updateScorePill();
+  }
+
+  function updateScorePill(){
+    const s = ScoringEngine.compute(State.profile);
+    const pill = document.getElementById('scorePill');
+    pill.textContent = `Health Score ${s.overall} \u00b7 ${s.grade}`;
+  }
+
+  function setTheme(t){
+    document.body.setAttribute('data-theme', t);
+    State.setSetting('theme', t);
+    document.getElementById('btnLight').classList.toggle('active', t==='light');
+    document.getElementById('btnDark').classList.toggle('active', t==='dark');
+  }
+
+  function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+  function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+  let toastTimer;
+  function toast(msg, kind){
+    const wrap = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `${icon(kind==='error'?'warn':'check',15)}<span>${Utils.escapeHtml(msg)}</span>`;
+    wrap.appendChild(t);
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(6px)'; t.style.transition='all .25s'; setTimeout(()=>t.remove(),260); }, 2600);
+  }
+
+  function openModal(html){
+    document.getElementById('modalRoot').innerHTML = html;
+    document.getElementById('modalBackdrop').classList.add('show');
+  }
+  function closeModal(){
+    document.getElementById('modalBackdrop').classList.remove('show');
+    setTimeout(()=>{ document.getElementById('modalRoot').innerHTML=''; }, 200);
+  }
+
+  function init(){
+    State.init();
+    setTheme(State.settings.theme||'light');
+    renderNav();
+    navigate(State.activeTab||'dashboard');
+    document.getElementById('modalBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='modalBackdrop') closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+  }
+
+  return { renderNav, navigate, setTheme, openSidebar, closeSidebar, toast, openModal, closeModal, init, updateScorePill, titles };
+})();
+
+/* ---------------------------------------------------------------------
+   MODULE: Views — per-tab render functions returning HTML strings.
+--------------------------------------------------------------------- */
+const Views = (() => {
+
+  function render(tab){
+    const el = document.getElementById('content');
+    const fn = handlers[tab] || handlers.dashboard;
+    el.innerHTML = fn();
+    afterRender[tab] && afterRender[tab]();
+  }
+
+  function disclaimer(){
+    return `<div class="disclaimer-bar">${icon('info',18)}<div>This application is for educational purposes only and does not constitute financial, legal or insurance advice. Insurance needs differ based on individual circumstances. Product features, riders and policy terms may change over time. Always verify the latest information directly with the insurer before making any purchasing decision.</div></div>`;
+  }
+
+  /* ---------------- DASHBOARD ---------------- */
+  function dashboard(){
+    const p = State.profile;
+    const t = PortfolioEngine.totals();
+    const score = ScoringEngine.compute(p);
+    const gaps = GapEngine.analyse(p);
+    const insights = InsightsEngine.generate(p).slice(0,5);
+    const expiring = PortfolioEngine.expiringPolicies(90);
+    const expired = PortfolioEngine.expiredPolicies();
+    const catItems = Object.entries(t.byCategory).filter(([,v])=>v>0).map(([id,v])=>({label:(DATA.CATEGORIES.find(c=>c.id===id)||{}).label||id, value:v}));
+    const provItems = PortfolioEngine.concentrationByProvider().map(c=>({label:c.name, value:c.premium}));
+
+    return `
+    ${State.portfolio.length===0 ? `<div class="card card-lg" style="margin-bottom:20px;">
+      <div class="empty-state">
+        ${icon('folder',40)}
+        <h3>Your portfolio is empty</h3>
+        <p style="font-size:13px;margin-top:4px;">Add the policies you already own to unlock personalised gap analysis, a health score, and tailored insights.</p>
+        <button class="btn btn-primary" onclick="Views.openPolicyModal()">${icon('plus',15)} Add your first policy</button>
+      </div>
+    </div>` : ''}
+
+    <div class="grid grid-4" style="margin-bottom:20px;">
+      <div class="card stat-card"><div class="stat-label">Total Annual Premium</div><div class="stat-value">${Utils.fmtMoney(t.totalAnnual)}</div>
+        <div class="stat-foot">${Utils.fmtMoney(t.totalMonthly)}/month equivalent</div></div>
+      <div class="card stat-card"><div class="stat-label">Total Coverage</div><div class="stat-value">${Utils.fmtMoney(t.totalCoverage,{abbr:true})}</div>
+        <div class="stat-foot">Across ${t.policyCount} active polic${t.policyCount===1?'y':'ies'}</div></div>
+      <div class="card stat-card"><div class="stat-label">Insurance Health Score</div><div class="stat-value">${score.overall} <span style="font-size:14px;color:var(--text-faint);">/ 100</span></div>
+        <div class="stat-foot">Grade ${score.grade}</div></div>
+      <div class="card stat-card"><div class="stat-label">Riders Attached</div><div class="stat-value">${t.riderCount}</div>
+        <div class="stat-foot">${PortfolioEngine.duplicateCategories().length} duplicate categor${PortfolioEngine.duplicateCategories().length===1?'y':'ies'} detected</div></div>
+    </div>
+
+    ${(expired.length>0||expiring.length>0) ? `<div class="card" style="margin-bottom:20px;border-color:color-mix(in srgb, var(--amber) 40%, transparent);">
+      <div class="card-title">${icon('warn',15)} Policy Expiry Timeline</div>
+      <div class="card-desc">${expired.length} expired \u00b7 ${expiring.length} expiring within 90 days</div>
+      ${Charts.timeline(PortfolioEngine.activePolicies())}
+    </div>` : ''}
+
+    <div class="grid grid-2" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">Coverage by Category</div>
+        <div class="card-desc">Non-ILP coverage amounts held across your portfolio</div>
+        ${catItems.length? Charts.donut(catItems,{centerLabel:Utils.fmtMoney(t.totalCoverage,{abbr:true}), centerSub:'Total coverage'})+Charts.legend(catItems) : `<div class="empty-state">${icon('target',32)}<div>No coverage data yet</div></div>`}
+      </div>
+      <div class="card">
+        <div class="card-title">Coverage Concentration by Insurer</div>
+        <div class="card-desc">Annual premium share by provider</div>
+        ${provItems.length? Charts.donut(provItems,{centerLabel:Utils.fmtMoney(t.totalAnnual,{abbr:true}), centerSub:'Total premium'})+Charts.legend(provItems) : `<div class="empty-state">${icon('folder',32)}<div>No premium data yet</div></div>`}
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="section-head" style="margin-bottom:6px;"><h2 style="font-size:15px;">Top Gap Priorities</h2>
+          <button class="btn btn-ghost btn-sm" onclick="UI.navigate('gaps')">View all</button></div>
+        ${gaps.filter(g=>g.priority==='high').slice(0,4).map(g=>gapMini(g)).join('') || `<div class="help-text">No high-priority gaps detected \u2014 nice work.</div>`}
+      </div>
+      <div class="card">
+        <div class="section-head" style="margin-bottom:6px;"><h2 style="font-size:15px;">Latest Insights</h2>
+          <button class="btn btn-ghost btn-sm" onclick="UI.navigate('insights')">View all</button></div>
+        ${insights.map(i=>insightRow(i)).join('')}
+      </div>
+    </div>
+    ${disclaimer()}
+    `;
+  }
+  function gapMini(g){
+    const color = g.priority==='high'?'var(--brick)':g.priority==='medium'?'var(--amber)':'var(--emerald)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${g.label}</div>
+        <div class="gap-bar-track" style="margin-top:6px;"><div class="gap-bar-fill" style="width:${Utils.clamp(g.pct,0,100)}%;background:${color};"></div></div>
+      </div>
+      <div class="mono" style="font-size:12px;color:var(--text-faint);width:44px;text-align:right;">${Math.round(g.pct)}%</div>
+    </div>`;
+  }
+  function insightRow(i){
+    const map = { good:['check','badge-emerald'], warn:['warn','badge-amber'], bad:['warn','badge-brick'], info:['info','badge-blue'] };
+    const [ic,cls] = map[i.type]||map.info;
+    return `<div class="insight">
+      <div class="insight-icon ${cls}">${icon(ic,15)}</div>
+      <div><div class="insight-text">${i.text}</div><div class="insight-tag">${i.tag}</div></div>
+    </div>`;
+  }
+
+  const handlers = { dashboard };
+  const afterRender = {};
+  return { render, disclaimer, gapMini, insightRow, handlers, afterRender };
+})();
+
+/* ---------------- PROFILE VIEW ---------------- */
+Views.handlers.profile = function profileView(){
+  const p = State.profile;
+  const field = (id,label,type,extra) => `
+    <div class="field"><label for="f_${id}">${label}</label>
+      <input id="f_${id}" type="${type||'number'}" value="${Utils.escapeHtml(p[id])}" ${extra||''} onchange="Actions.updateProfileField('${id}', this.value, this.type)">
+    </div>`;
+  const select = (id,label,options) => `
+    <div class="field"><label for="f_${id}">${label}</label>
+      <select id="f_${id}" onchange="Actions.updateProfileField('${id}', this.value)">
+        ${options.map(o=>`<option value="${o.v}" ${p[id]===o.v?'selected':''}>${o.l}</option>`).join('')}
+      </select>
+    </div>`;
+  return `
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="card-title">Personal & Household</div>
+    <div class="card-desc">Used to calculate income-replacement and dependant-based recommendations.</div>
+    <div class="field-row">
+      ${field('age','Age','number')}
+      ${select('gender','Gender',[{v:'male',l:'Male'},{v:'female',l:'Female'},{v:'other',l:'Prefer not to say'}])}
+    </div>
+    <div class="field-row">
+      ${field('occupation','Occupation','text')}
+      ${select('employmentType','Employment Type',[{v:'employee',l:'Employee'},{v:'self-employed',l:'Self-Employed'},{v:'business-owner',l:'Business Owner'},{v:'unemployed',l:'Not Currently Working'}])}
+    </div>
+    <div class="field-row">
+      ${select('maritalStatus','Marital Status',[{v:'single',l:'Single'},{v:'married',l:'Married'},{v:'divorced',l:'Divorced'},{v:'widowed',l:'Widowed'}])}
+      ${field('children','Number of Children','number')}
+    </div>
+    <div class="field">${field('dependants','Total Dependants (incl. children, parents, spouse)','number')}</div>
+  </div>
+
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="card-title">Income & Cash Flow</div>
+    <div class="field-row">
+      ${field('annualIncome','Annual Income (S$)','number')}
+      ${field('monthlyIncome','Monthly Income (S$)','number')}
+    </div>
+  </div>
+
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="card-title">Housing & Liabilities</div>
+    <div class="field-row">
+      ${select('housingType','Housing Type',[{v:'hdb',l:'HDB Flat'},{v:'condo',l:'Condominium'},{v:'landed',l:'Landed Property'},{v:'renting',l:'Renting'}])}
+      ${field('mortgageBalance','Outstanding Mortgage Balance (S$)','number')}
+    </div>
+    <div class="field-row">
+      ${field('otherLoans','Other Loans (S$)','number')}
+      ${field('emergencyFund','Emergency Fund (S$)','number')}
+    </div>
+  </div>
+
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="card-title">Net Worth & CPF</div>
+    <div class="field-row">
+      ${field('netWorth','Net Worth (S$)','number')}
+      ${field('retirementSavings','Retirement Savings outside CPF (S$)','number')}
+    </div>
+    <div class="field-row">
+      ${field('cpfOA','CPF Ordinary Account (S$)','number')}
+      ${field('cpfSA','CPF Special Account (S$)','number')}
+    </div>
+    <div class="field">${field('cpfMA','CPF MediSave Account (S$)','number')}</div>
+  </div>
+  ${Views.disclaimer()}
+  `;
+};
+Views.afterRender.profile = function(){};
+
+/* ---------------- POLICY MODAL (add/edit) ---------------- */
+Views.openPolicyModal = function(policyId){
+  const editing = policyId ? State.portfolio.find(x=>x.id===policyId) : null;
+  const p = editing || { provider:'aia', category:'hosp', product:'', coverageAmount:0, sumAssured:0,
+    monthlyPremium:0, annualPremium:0, startDate:'', endDate:'', status:'active', owner:'Self',
+    lifeAssured:'Self', beneficiary:'', riders:[], waitingPeriod:'', notes:'' };
+  const products = (DATA.PRODUCTS[p.provider]||{})[p.category]||[];
+  const riders = DATA.RIDERS[p.provider]||DATA.RIDERS.other;
+
+  const html = `
+  <div class="modal-head">
+    <h3>${editing?'Edit Policy':'Add Policy'}</h3>
+    <button class="modal-close" onclick="UI.closeModal()">${icon('x',16)}</button>
+  </div>
+  <div class="modal-body" id="policyForm" data-editing="${editing?editing.id:''}">
+    <div class="fieldset-title">Provider & Product</div>
+    <div class="field-row">
+      <div class="field"><label>Provider</label>
+        <select id="pf_provider" onchange="Views.refreshPolicyProductOptions()">
+          ${DATA.PROVIDERS.map(pr=>`<option value="${pr.id}" ${p.provider===pr.id?'selected':''}>${pr.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Policy Type</label>
+        <select id="pf_category" onchange="Views.refreshPolicyProductOptions()">
+          ${DATA.CATEGORIES.map(c=>`<option value="${c.id}" ${p.category===c.id?'selected':''}>${c.label}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Product</label>
+      <select id="pf_product">
+        ${products.map(pn=>`<option value="${Utils.escapeHtml(pn)}" ${p.product===pn?'selected':''}>${Utils.escapeHtml(pn)}</option>`).join('')}
+        <option value="__custom__" ${(editing && !products.includes(p.product))?'selected':''}>Other / type manually\u2026</option>
+      </select>
+      <input id="pf_product_custom" placeholder="Enter product name" style="margin-top:8px;${(editing && !products.includes(p.product))?'':'display:none;'}" value="${(editing && !products.includes(p.product))?Utils.escapeHtml(p.product):''}">
+    </div>
+
+    <div class="fieldset-title">Coverage & Premiums</div>
+    <div class="field-row">
+      <div class="field"><label>Sum Assured / Coverage Amount (S$)</label><input id="pf_coverage" type="number" value="${p.coverageAmount||p.sumAssured||0}"></div>
+      <div class="field"><label>Sum Assured (if different, e.g. rider) (S$)</label><input id="pf_sumassured" type="number" value="${p.sumAssured||0}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Monthly Premium (S$)</label><input id="pf_monthly" type="number" value="${p.monthlyPremium||0}" onchange="Views.syncPremium('monthly')"></div>
+      <div class="field"><label>Annual Premium (S$)</label><input id="pf_annual" type="number" value="${p.annualPremium||0}" onchange="Views.syncPremium('annual')"></div>
+    </div>
+
+    <div class="fieldset-title">Dates & Status</div>
+    <div class="field-row">
+      <div class="field"><label>Policy Start Date</label><input id="pf_start" type="date" value="${p.startDate||''}"></div>
+      <div class="field"><label>Policy End Date</label><input id="pf_end" type="date" value="${p.endDate||''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Status</label>
+        <select id="pf_status">
+          <option value="active" ${p.status==='active'?'selected':''}>Active</option>
+          <option value="lapsed" ${p.status==='lapsed'?'selected':''}>Lapsed</option>
+          <option value="expired" ${p.status==='expired'?'selected':''}>Expired</option>
+        </select>
+      </div>
+      <div class="field"><label>Waiting Period</label><input id="pf_waiting" type="text" placeholder="e.g. 90 days" value="${Utils.escapeHtml(p.waitingPeriod)}"></div>
+    </div>
+
+    <div class="fieldset-title">People</div>
+    <div class="field-row">
+      <div class="field"><label>Policy Owner</label><input id="pf_owner" type="text" value="${Utils.escapeHtml(p.owner)}"></div>
+      <div class="field"><label>Life Assured</label><input id="pf_lifeassured" type="text" value="${Utils.escapeHtml(p.lifeAssured)}"></div>
+    </div>
+    <div class="field"><label>Beneficiary Notes</label><input id="pf_beneficiary" type="text" value="${Utils.escapeHtml(p.beneficiary)}"></div>
+
+    <div class="fieldset-title">Riders</div>
+    <div class="chip-select" id="pf_riders">
+      ${riders.map(r=>`<div class="chip ${p.riders.includes(r.name)?'on':''}" data-rider="${Utils.escapeHtml(r.name)}" onclick="this.classList.toggle('on')" title="${Utils.escapeHtml(r.purpose)}">${r.name}</div>`).join('')}
+    </div>
+
+    <div class="fieldset-title">Notes</div>
+    <div class="field"><textarea id="pf_notes" placeholder="Any other notes about this policy\u2026">${Utils.escapeHtml(p.notes)}</textarea></div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-outline" onclick="UI.closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="Views.savePolicyForm()">${icon('check',15)} ${editing?'Save Changes':'Add Policy'}</button>
+  </div>`;
+  UI.openModal(html);
+  document.getElementById('pf_product').addEventListener('change', function(){
+    document.getElementById('pf_product_custom').style.display = this.value==='__custom__' ? 'block':'none';
+  });
+};
+
+Views.refreshPolicyProductOptions = function(){
+  const provider = document.getElementById('pf_provider').value;
+  const category = document.getElementById('pf_category').value;
+  const products = (DATA.PRODUCTS[provider]||{})[category]||[];
+  const sel = document.getElementById('pf_product');
+  sel.innerHTML = products.map(pn=>`<option value="${Utils.escapeHtml(pn)}">${Utils.escapeHtml(pn)}</option>`).join('') + `<option value="__custom__">Other / type manually\u2026</option>`;
+  document.getElementById('pf_product_custom').style.display = products.length?'none':'block';
+  // refresh riders to match provider
+  const riders = DATA.RIDERS[provider]||DATA.RIDERS.other;
+  document.getElementById('pf_riders').innerHTML = riders.map(r=>`<div class="chip" data-rider="${Utils.escapeHtml(r.name)}" onclick="this.classList.toggle('on')" title="${Utils.escapeHtml(r.purpose)}">${r.name}</div>`).join('');
+};
+
+Views.syncPremium = function(source){
+  const m = document.getElementById('pf_monthly'), a = document.getElementById('pf_annual');
+  if(source==='monthly') a.value = Math.round((Number(m.value)||0)*12);
+  else m.value = Math.round(((Number(a.value)||0)/12)*100)/100;
+};
+
+Views.savePolicyForm = function(){
+  const form = document.getElementById('policyForm');
+  const editingId = form.getAttribute('data-editing');
+  const productSel = document.getElementById('pf_product').value;
+  const product = productSel==='__custom__' ? document.getElementById('pf_product_custom').value.trim() : productSel;
+  if(!product){ UI.toast('Please provide a product name', 'error'); return; }
+  const riders = Array.from(document.querySelectorAll('#pf_riders .chip.on')).map(c=>c.getAttribute('data-rider'));
+  const payload = {
+    provider: document.getElementById('pf_provider').value,
+    category: document.getElementById('pf_category').value,
+    product,
+    coverageAmount: Number(document.getElementById('pf_coverage').value)||0,
+    sumAssured: Number(document.getElementById('pf_sumassured').value)||0,
+    monthlyPremium: Number(document.getElementById('pf_monthly').value)||0,
+    annualPremium: Number(document.getElementById('pf_annual').value)||0,
+    startDate: document.getElementById('pf_start').value,
+    endDate: document.getElementById('pf_end').value,
+    status: document.getElementById('pf_status').value,
+    waitingPeriod: document.getElementById('pf_waiting').value,
+    owner: document.getElementById('pf_owner').value||'Self',
+    lifeAssured: document.getElementById('pf_lifeassured').value||'Self',
+    beneficiary: document.getElementById('pf_beneficiary').value,
+    riders, notes: document.getElementById('pf_notes').value,
+  };
+  if(editingId){ State.updatePolicy(editingId, payload); UI.toast('Policy updated'); }
+  else { State.addPolicy(payload); UI.toast('Policy added'); }
+  UI.closeModal();
+  UI.updateScorePill();
+  Views.render(State.activeTab);
+};
+
+/* ---------------- PORTFOLIO VIEW ---------------- */
+let portfolioUIState = { search:'', provider:'all', category:'all', status:'all', sort:'startDate-desc', groupBy:'' };
+
+Views.handlers.portfolio = function portfolioView(){
+  const s = portfolioUIState;
+  let list = PortfolioEngine.query({ ...s, includeArchived: s.status==='archived' });
+  const grouped = s.groupBy ? PortfolioEngine.query({...s, includeArchived: s.status==='archived', groupBy:s.groupBy}) : null;
+
+  const controls = `
+  <div class="card" style="margin-bottom:18px;">
+    <div class="grid grid-4" style="gap:12px;margin-bottom:0;">
+      <div class="field" style="margin-bottom:0;"><label>Search</label><input type="text" placeholder="Search policies\u2026" value="${Utils.escapeHtml(s.search)}" oninput="Actions.setPortfolioFilter('search', this.value)"></div>
+      <div class="field" style="margin-bottom:0;"><label>Provider</label>
+        <select onchange="Actions.setPortfolioFilter('provider', this.value)">
+          <option value="all">All Providers</option>
+          ${DATA.PROVIDERS.map(p=>`<option value="${p.id}" ${s.provider===p.id?'selected':''}>${p.name}</option>`).join('')}
+        </select></div>
+      <div class="field" style="margin-bottom:0;"><label>Type</label>
+        <select onchange="Actions.setPortfolioFilter('category', this.value)">
+          <option value="all">All Types</option>
+          ${DATA.CATEGORIES.map(c=>`<option value="${c.id}" ${s.category===c.id?'selected':''}>${c.label}</option>`).join('')}
+        </select></div>
+      <div class="field" style="margin-bottom:0;"><label>Status</label>
+        <select onchange="Actions.setPortfolioFilter('status', this.value)">
+          <option value="all" ${s.status==='all'?'selected':''}>All (excl. archived)</option>
+          <option value="active" ${s.status==='active'?'selected':''}>Active</option>
+          <option value="lapsed" ${s.status==='lapsed'?'selected':''}>Lapsed</option>
+          <option value="expired" ${s.status==='expired'?'selected':''}>Expired</option>
+          <option value="archived" ${s.status==='archived'?'selected':''}>Archived</option>
+        </select></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="field" style="margin-bottom:0;min-width:180px;"><label>Sort By</label>
+        <select onchange="Actions.setPortfolioFilter('sort', this.value)">
+          <option value="startDate-desc" ${s.sort==='startDate-desc'?'selected':''}>Start Date (newest)</option>
+          <option value="startDate-asc" ${s.sort==='startDate-asc'?'selected':''}>Start Date (oldest)</option>
+          <option value="endDate-asc" ${s.sort==='endDate-asc'?'selected':''}>End Date (soonest)</option>
+          <option value="annualPremium-desc" ${s.sort==='annualPremium-desc'?'selected':''}>Annual Premium (high\u2192low)</option>
+          <option value="coverageAmount-desc" ${s.sort==='coverageAmount-desc'?'selected':''}>Coverage (high\u2192low)</option>
+          <option value="product-asc" ${s.sort==='product-asc'?'selected':''}>Product Name (A\u2192Z)</option>
+        </select></div>
+      <div class="field" style="margin-bottom:0;min-width:180px;"><label>Group By</label>
+        <select onchange="Actions.setPortfolioFilter('groupBy', this.value)">
+          <option value="" ${!s.groupBy?'selected':''}>No Grouping</option>
+          <option value="provider" ${s.groupBy==='provider'?'selected':''}>Insurer</option>
+          <option value="category" ${s.groupBy==='category'?'selected':''}>Insurance Type</option>
+        </select></div>
+      <div class="topbar-spacer"></div>
+      <button class="btn btn-primary" onclick="Views.openPolicyModal()">${icon('plus',15)} Add Policy</button>
+    </div>
+  </div>`;
+
+  function cardsFor(arr){ return `<div class="grid grid-3">${arr.map(policyCard).join('')}</div>`; }
+
+  let body;
+  if(list.length===0 && !grouped){
+    body = `<div class="card"><div class="empty-state">${icon('folder',36)}<h3>No policies match these filters</h3><p style="font-size:13px;margin-top:4px;">Try adjusting your search or filters, or add a new policy.</p><button class="btn btn-primary" onclick="Views.openPolicyModal()">${icon('plus',15)} Add Policy</button></div></div>`;
+  } else if(grouped){
+    body = Object.entries(grouped).map(([g,arr])=>`
+      <div style="margin-bottom:22px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.04em;">${g} <span class="badge badge-neutral">${arr.length}</span></div>
+        ${cardsFor(arr)}
+      </div>`).join('');
+  } else {
+    body = cardsFor(list);
+  }
+
+  return controls + body;
+};
+
+function policyCard(p){
+  const cat = (DATA.CATEGORIES.find(c=>c.id===p.category)||{}).label || p.category;
+  const daysLeft = Utils.daysUntil(p.endDate);
+  let statusBadge = `<span class="badge badge-emerald">Active</span>`;
+  if(p.status==='archived') statusBadge = `<span class="badge badge-neutral">Archived</span>`;
+  else if(p.status==='lapsed') statusBadge = `<span class="badge badge-brick">Lapsed</span>`;
+  else if(p.status==='expired' || (daysLeft!==null && daysLeft<0)) statusBadge = `<span class="badge badge-brick">Expired</span>`;
+  else if(daysLeft!==null && daysLeft<=90) statusBadge = `<span class="badge badge-amber">Expiring Soon</span>`;
+  const ilpBadge = p.category==='ilp' ? `<span class="badge badge-blue">ILP \u2014 excluded from gap analysis</span>` : '';
+  return `
+  <div class="policy-card ${p.status==='archived'?'archived':''}">
+    <div class="policy-top">
+      <div>
+        <div class="policy-provider">${DATA.label(p.provider)}</div>
+        <div class="policy-name">${Utils.escapeHtml(p.product)}</div>
+      </div>
+    </div>
+    <div class="policy-meta">
+      <span class="badge badge-neutral">${cat}</span>
+      ${statusBadge}
+      ${ilpBadge}
+      ${(p.riders||[]).length ? `<span class="badge badge-blue">${p.riders.length} rider${p.riders.length>1?'s':''}</span>`:''}
+    </div>
+    <div class="policy-figures">
+      <div><div class="pf-label">Coverage</div><div class="pf-value">${Utils.fmtMoney(p.coverageAmount,{abbr:true})}</div></div>
+      <div><div class="pf-label">Annual Premium</div><div class="pf-value">${Utils.fmtMoney(p.annualPremium)}</div></div>
+      <div><div class="pf-label">Start</div><div class="pf-value" style="font-size:12px;">${Utils.fmtDate(p.startDate)}</div></div>
+      <div><div class="pf-label">End</div><div class="pf-value" style="font-size:12px;">${p.endDate?Utils.fmtDate(p.endDate):'\u2014'}</div></div>
+    </div>
+    <div class="help-text">Owner: ${Utils.escapeHtml(p.owner)} \u00b7 Life Assured: ${Utils.escapeHtml(p.lifeAssured)}</div>
+    <div class="policy-actions">
+      <button class="btn btn-ghost btn-sm" onclick="Views.openPolicyModal('${p.id}')">${icon('edit',13)} Edit</button>
+      <button class="btn btn-ghost btn-sm" onclick="Actions.duplicatePolicy('${p.id}')">${icon('copy',13)} Duplicate</button>
+      <button class="btn btn-ghost btn-sm" onclick="Actions.archivePolicy('${p.id}')">${icon('archive',13)} ${p.status==='archived'?'Unarchive':'Archive'}</button>
+      <button class="btn btn-danger btn-sm" onclick="Actions.deletePolicy('${p.id}')">${icon('trash',13)} Delete</button>
+    </div>
+  </div>`;
+}
+
+/* ---------------- GAP ANALYSIS VIEW ---------------- */
+Views.handlers.gaps = function gapsView(){
+  const rows = GapEngine.analyse(State.profile);
+  const priorityOrder = {high:0, medium:1, low:2};
+  const sorted = [...rows].sort((a,b)=>priorityOrder[a.priority]-priorityOrder[b.priority]);
+  const priBadge = pr => pr==='high'?'<span class="badge badge-brick">High Priority</span>':pr==='medium'?'<span class="badge badge-amber">Medium Priority</span>':'<span class="badge badge-emerald">Low Priority</span>';
+  return `
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="card-title">Portfolio-wide Gap Analysis</div>
+    <div class="card-desc">Recommended coverage is calculated holistically from your profile (income, dependants, liabilities), then compared against everything currently in your portfolio \u2014 not policy-by-policy.</div>
+    <div class="divider"></div>
+    ${sorted.map(r=>`
+      <div class="gap-row">
+        <div>
+          <div class="gap-cat">${r.label}</div>
+          <div style="margin-top:4px;">${priBadge(r.priority)}</div>
+        </div>
+        <div>
+          <div class="gap-bar-track"><div class="gap-bar-fill" style="width:${Utils.clamp(r.pct,0,100)}%;background:${r.priority==='high'?'var(--brick)':r.priority==='medium'?'var(--amber)':'var(--emerald)'};"></div></div>
+          <div class="help-text" style="margin-top:5px;">Current ${Utils.fmtMoney(r.have,{abbr:true})} of recommended ${Utils.fmtMoney(r.need,{abbr:true})}${r.gap>0?` \u2014 gap of ${Utils.fmtMoney(r.gap,{abbr:true})}`:''}</div>
+        </div>
+        <div class="gap-pct">${Math.round(r.pct)}%</div>
+        <div style="text-align:right;"><span class="riskbadge-${r.risk}" style="font-size:12px;font-weight:700;text-transform:uppercase;">${r.risk}</span></div>
+      </div>`).join('')}
+  </div>
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="card-title">Protection Pyramid</div>
+    <div class="card-desc">Core protection layers, from foundation (hospitalisation) to advanced (disability &amp; mortgage), shaded by how funded each layer is.</div>
+    ${Charts.pyramid([
+      {label:'Emergency Fund', pct: rows.find(r=>r.id==='emergency').pct},
+      {label:'Hospitalisation', pct: rows.find(r=>r.id==='hosp').pct},
+      {label:'Critical Illness', pct: rows.find(r=>r.id==='ci').pct},
+      {label:'Life Insurance', pct: rows.find(r=>r.id==='life').pct},
+      {label:'Disability Income', pct: rows.find(r=>r.id==='di').pct},
+    ])}
+  </div>
+  ${Views.disclaimer()}
+  `;
+};
+
+/* ---------------- HEALTH SCORE VIEW ---------------- */
+Views.handlers.score = function scoreView(){
+  const s = ScoringEngine.compute(State.profile);
+  const sub = [
+    {label:'Protection Score', val:s.protectionScore, desc:'Average adequacy across life, hospitalisation, CI, disability and PA.'},
+    {label:'Portfolio Diversification', val:s.diversificationScore, desc:'How many core protection categories have any coverage at all.'},
+    {label:'Dependant Protection', val:s.dependantScore, desc:'Life coverage vs. income-replacement need for your dependants.'},
+    {label:'Hospitalisation Score', val:s.hospScore, desc:'Integrated Shield Plan coverage vs. benchmark tier.'},
+    {label:'Critical Illness Score', val:s.ciScore, desc:'CI + Early CI coverage vs. income-based benchmark.'},
+    {label:'Disability Score', val:s.diScore, desc:'Disability income coverage vs. 75% income-replacement benchmark.'},
+    {label:'Mortgage Protection', val:s.mortgageScore, desc:'Coverage vs. outstanding mortgage balance.'},
+    {label:'Premium Efficiency', val:s.efficiency, desc:'Penalised by duplicate coverage, concentration, or premiums above ~15% of income.'},
+  ];
+  return `
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="score-hero">
+      ${Charts.gauge(s.overall,100)}
+      <div>
+        <div class="stat-label">Overall Insurance Health Score</div>
+        <div class="score-num">${s.overall}<span style="font-size:22px;color:var(--text-faint);"> / 100</span></div>
+        <div class="score-grade">Letter Grade: <strong style="color:var(--text);">${s.grade}</strong></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-4" style="margin-bottom:20px;">
+    ${sub.map(x=>`
+      <div class="card">
+        <div class="stat-label">${x.label}</div>
+        <div class="stat-value" style="font-size:22px;margin-top:4px;">${x.val}</div>
+        <div class="gap-bar-track" style="margin-top:8px;"><div class="gap-bar-fill" style="width:${x.val}%;background:${x.val>=80?'var(--emerald)':x.val>=50?'var(--amber)':'var(--brick)'};"></div></div>
+        <div class="help-text" style="margin-top:8px;">${x.desc}</div>
+      </div>`).join('')}
+  </div>
+  ${Views.disclaimer()}
+  `;
+};
+
+/* ---------------- INSIGHTS VIEW ---------------- */
+Views.handlers.insights = function insightsView(){
+  const insights = InsightsEngine.generate(State.profile);
+  const counts = { good:0, warn:0, bad:0, info:0 };
+  insights.forEach(i=>counts[i.type]++);
+  return `
+  <div class="grid grid-4" style="margin-bottom:20px;">
+    <div class="card stat-card"><div class="stat-label">Total Insights</div><div class="stat-value">${insights.length}</div></div>
+    <div class="card stat-card"><div class="stat-label">Positive</div><div class="stat-value" style="color:var(--emerald);">${counts.good}</div></div>
+    <div class="card stat-card"><div class="stat-label">Needs Attention</div><div class="stat-value" style="color:var(--amber);">${counts.warn}</div></div>
+    <div class="card stat-card"><div class="stat-label">Critical</div><div class="stat-value" style="color:var(--brick);">${counts.bad}</div></div>
+  </div>
+  <div class="card card-lg">
+    <div class="card-title">All Insights</div>
+    <div class="card-desc">Rule-based observations generated from your profile and portfolio data.</div>
+    <div class="divider"></div>
+    ${insights.map(i=>Views.insightRow(i)).join('')}
+  </div>
+  ${Views.disclaimer()}
+  `;
+};
+
+/* ---------------- SCENARIO PLANNER VIEW ---------------- */
+let scenarioSelected = null;
+Views.handlers.scenarios = function scenariosView(){
+  const result = scenarioSelected ? ScenarioEngine.run(scenarioSelected, State.profile) : null;
+  return `
+  <div class="card card-lg" style="margin-bottom:20px;">
+    <div class="card-title">Choose a Life Event</div>
+    <div class="card-desc">See how a life event would shift your recommended coverage and health score \u2014 your saved profile is not changed.</div>
+    <div class="grid grid-4" style="margin-top:14px;">
+      ${ScenarioEngine.SCENARIOS.map(sc=>`
+        <button class="btn ${scenarioSelected===sc.id?'btn-primary':'btn-outline'}" style="flex-direction:column;align-items:flex-start;text-align:left;height:auto;padding:14px;gap:4px;"
+          onclick="Actions.runScenario('${sc.id}')">
+          <span style="font-size:13px;font-weight:700;">${sc.label}</span>
+          <span style="font-size:11px;font-weight:400;opacity:.85;">${sc.desc}</span>
+        </button>`).join('')}
+    </div>
+  </div>
+  ${result ? `
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-title">Before: ${result.scenario.label}</div>
+      <div class="stat-value" style="margin:10px 0;">${result.before.score.overall} <span style="font-size:13px;color:var(--text-faint);">/ 100 (${result.before.score.grade})</span></div>
+      ${result.before.gaps.filter(g=>g.priority!=='low').slice(0,5).map(g=>Views.gapMini(g)).join('') || '<div class="help-text">No notable gaps.</div>'}
+    </div>
+    <div class="card" style="border-color:var(--emerald);">
+      <div class="card-title">After: ${result.scenario.label}</div>
+      <div class="stat-value" style="margin:10px 0;">${result.after.score.overall} <span style="font-size:13px;color:var(--text-faint);">/ 100 (${result.after.score.grade})</span></div>
+      ${result.after.gaps.filter(g=>g.priority!=='low').slice(0,5).map(g=>Views.gapMini(g)).join('') || '<div class="help-text">No notable gaps.</div>'}
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">What Changes</div>
+    <div class="grid grid-3">
+      ${['life','ci','di','hosp','mortgage'].map(id=>{
+        const b = result.before.gaps.find(g=>g.id===id), a = result.after.gaps.find(g=>g.id===id);
+        const delta = a.need - b.need;
+        if(Math.abs(delta) < 1) return '';
+        return `<div class="card" style="box-shadow:none;">
+          <div class="stat-label">${a.label}</div>
+          <div style="font-size:13px;margin-top:6px;">Recommended coverage ${delta>0?'increases':'decreases'} by <strong class="${delta>0?'trend-down':'trend-up'}">${Utils.fmtMoney(Math.abs(delta),{abbr:true})}</strong></div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>` : `<div class="card"><div class="empty-state">${icon('route',36)}<div>Select a life event above to see the before/after comparison.</div></div></div>`}
+  ${Views.disclaimer()}
+  `;
+};
+
+/* ---------------- VISUALISATIONS VIEW ---------------- */
+Views.handlers.visuals = function visualsView(){
+  const t = PortfolioEngine.totals();
+  const s = ScoringEngine.compute(State.profile);
+  const rows = GapEngine.analyse(State.profile);
+  const catItems = Object.entries(t.byCategory).filter(([,v])=>v>0).map(([id,v])=>({label:(DATA.CATEGORIES.find(c=>c.id===id)||{}).label||id, value:v}));
+  const provItems = PortfolioEngine.concentrationByProvider().map(c=>({label:c.name, value:c.premium}));
+  const gapDash = rows.filter(r=>r.id!=='emergency').map(r=>({label:r.label, value:r.gap}));
+  const riskRows = rows.map(r=>({label:r.label, risk:r.risk}));
+  return `
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="card"><div class="card-title">Insurance Portfolio Overview</div><div class="card-desc">Coverage by category</div>
+      ${catItems.length?Charts.donut(catItems,{centerLabel:Utils.fmtMoney(t.totalCoverage,{abbr:true}),centerSub:'Total coverage'})+Charts.legend(catItems):'<div class="help-text">No data yet.</div>'}</div>
+    <div class="card"><div class="card-title">Coverage by Insurer</div><div class="card-desc">Annual premium share</div>
+      ${provItems.length?Charts.donut(provItems,{centerLabel:Utils.fmtMoney(t.totalAnnual,{abbr:true}),centerSub:'Total premium'})+Charts.legend(provItems):'<div class="help-text">No data yet.</div>'}</div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Coverage Gap Dashboard</div><div class="card-desc">Dollar gap remaining by category (recommended minus current)</div>
+    ${Charts.hbar(gapDash.filter(g=>g.value>0).sort((a,b)=>b.value-a.value))}
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Premium Allocation</div><div class="card-desc">Annual premium by insurance type</div>
+    ${Charts.hbar(Object.entries(Utils.groupBy(PortfolioEngine.activePolicies(),p=>p.category)).map(([cat,arr])=>({label:(DATA.CATEGORIES.find(c=>c.id===cat)||{}).label||cat, value:Utils.sum(arr,p=>p.annualPremium)})).sort((a,b)=>b.value-a.value))}
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Policy Expiry Timeline</div><div class="card-desc">All active policies with an end date, relative to today</div>
+    ${Charts.timeline(PortfolioEngine.activePolicies())}
+  </div>
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="card"><div class="card-title">Insurance Health Score Gauge</div>
+      <div style="display:flex;justify-content:center;">${Charts.gauge(s.overall,100)}</div></div>
+    <div class="card"><div class="card-title">Risk Matrix</div><div class="card-desc">Category vs. current risk level</div>
+      ${Charts.riskMatrix(riskRows)}</div>
+  </div>
+  ${Views.disclaimer()}
+  `;
+};
+
+/* ---------------- FAQ VIEW ---------------- */
+Views.handlers.faq = function faqView(){
+  return `
+  <div class="card card-lg">
+    <div class="card-title">Learn: Singapore Insurance Basics</div>
+    <div class="card-desc">Plain-English explanations \u2014 always confirm specifics with the insurer directly.</div>
+    <div class="divider"></div>
+    ${FAQ.map((f,idx)=>`
+      <div class="faq-item" id="faq_${idx}">
+        <div class="faq-q" onclick="Actions.toggleFaq(${idx})"><span>${f.q}</span>
+          <svg viewBox="0 0 20 20" width="16" height="16"><path d="M5 7.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">${f.a}</div></div>
+      </div>`).join('')}
+  </div>
+  ${Views.disclaimer()}
+  `;
+};
+
+/* ---------------- EXPORT & SETTINGS VIEW ---------------- */
+Views.handlers.export = function exportView(){
+  const t = PortfolioEngine.totals();
+  return `
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="card card-lg">
+      <div class="card-title">Export Your Data</div>
+      <div class="card-desc">Everything stays on this device \u2014 exports are generated locally in your browser.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px;">
+        <button class="btn btn-outline" onclick="window.print()">${icon('export',15)} Print / Save as PDF</button>
+        <button class="btn btn-outline" onclick="Actions.exportCSV()">${icon('export',15)} Export Portfolio as CSV</button>
+        <button class="btn btn-outline" onclick="Actions.exportJSON()">${icon('export',15)} Export Full Data as JSON</button>
+      </div>
+      <div class="help-text" style="margin-top:12px;">Print / Save as PDF uses your browser\u2019s native print dialog \u2014 choose "Save as PDF" as the destination.</div>
+    </div>
+    <div class="card card-lg">
+      <div class="card-title">Import</div>
+      <div class="card-desc">Restore a previously exported JSON backup.</div>
+      <input type="file" id="importFile" accept="application/json" style="margin-top:6px;">
+      <button class="btn btn-primary" style="margin-top:10px;" onclick="Actions.importJSON()">${icon('check',15)} Import Backup</button>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-title">Appearance</div>
+      <div class="card-desc">Choose light or dark mode.</div>
+      <div class="theme-toggle" style="margin-top:8px;max-width:220px;">
+        <button class="theme-btn ${State.settings.theme==='light'?'active':''}" onclick="UI.setTheme('light')">Light</button>
+        <button class="theme-btn ${State.settings.theme==='dark'?'active':''}" onclick="UI.setTheme('dark')">Dark</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Danger Zone</div>
+      <div class="card-desc">Permanently clear your saved profile and portfolio from this browser.</div>
+      <button class="btn btn-danger" style="margin-top:6px;" onclick="Actions.resetAll()">${icon('trash',15)} Reset All Data</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Data Summary</div>
+    <div class="grid grid-4">
+      <div><div class="stat-label">Policies</div><div class="stat-value" style="font-size:20px;">${t.policyCount}</div></div>
+      <div><div class="stat-label">Annual Premium</div><div class="stat-value" style="font-size:20px;">${Utils.fmtMoney(t.totalAnnual)}</div></div>
+      <div><div class="stat-label">Total Coverage</div><div class="stat-value" style="font-size:20px;">${Utils.fmtMoney(t.totalCoverage,{abbr:true})}</div></div>
+      <div><div class="stat-label">Storage</div><div class="stat-value" style="font-size:20px;">Local only</div></div>
+    </div>
+  </div>
+  ${Views.disclaimer()}
+  `;
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: Actions — event handler glue for inline DOM events.
+--------------------------------------------------------------------- */
+const Actions = (() => {
+  function updateProfileField(id, value, type){
+    const numericFields = ['age','annualIncome','monthlyIncome','children','dependants','mortgageBalance','otherLoans','emergencyFund','netWorth','cpfOA','cpfSA','cpfMA','retirementSavings'];
+    const v = numericFields.includes(id) ? Number(value)||0 : value;
+    State.updateProfile({[id]: v});
+    UI.updateScorePill();
+    if(State.activeTab==='dashboard') Views.render('dashboard');
+  }
+
+  function setPortfolioFilter(key, value){
+    portfolioUIState[key] = value;
+    Views.render('portfolio');
+  }
+
+  function duplicatePolicy(id){ State.duplicatePolicy(id); UI.toast('Policy duplicated'); Views.render('portfolio'); UI.updateScorePill(); }
+  function archivePolicy(id){ State.archivePolicy(id); UI.toast('Policy status updated'); Views.render('portfolio'); UI.updateScorePill(); }
+  function deletePolicy(id){
+    if(confirm('Delete this policy? This cannot be undone.')){
+      State.deletePolicy(id); UI.toast('Policy deleted'); Views.render('portfolio'); UI.updateScorePill();
+    }
+  }
+
+  function runScenario(id){ scenarioSelected = id; Views.render('scenarios'); }
+
+  function toggleFaq(idx){
+    const el = document.getElementById('faq_'+idx);
+    el.classList.toggle('open');
+  }
+
+  function exportCSV(){
+    const cols = ['provider','category','product','coverageAmount','sumAssured','monthlyPremium','annualPremium','startDate','endDate','status','owner','lifeAssured','beneficiary','riders','waitingPeriod','notes'];
+    const header = cols.join(',');
+    const rows = State.portfolio.map(p => cols.map(c=>{
+      let v = c==='riders' ? (p.riders||[]).join('; ') : p[c];
+      v = (v==null?'':String(v)).replace(/"/g,'""');
+      return /[,"\n]/.test(v) ? `"${v}"` : v;
+    }).join(','));
+    Utils.download('shieldcheck-portfolio.csv', [header, ...rows].join('\n'), 'text/csv');
+    UI.toast('CSV exported');
+  }
+  function exportJSON(){
+    const payload = { profile: State.profile, portfolio: State.portfolio, settings: State.settings, exportedAt: new Date().toISOString() };
+    Utils.download('shieldcheck-backup.json', JSON.stringify(payload, null, 2), 'application/json');
+    UI.toast('JSON exported');
+  }
+  function importJSON(){
+    const input = document.getElementById('importFile');
+    const file = input.files[0];
+    if(!file){ UI.toast('Choose a file first', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const parsed = JSON.parse(reader.result);
+        State.replaceAll({ profile: {...State.profile, ...(parsed.profile||{})}, portfolio: parsed.portfolio||[], settings: {...State.settings, ...(parsed.settings||{})}, activeTab: State.activeTab });
+        UI.toast('Backup imported');
+        UI.setTheme(State.settings.theme||'light');
+        Views.render(State.activeTab);
+        UI.updateScorePill();
+      }catch(e){ UI.toast('Invalid backup file', 'error'); }
+    };
+    reader.readAsText(file);
+  }
+  function resetAll(){
+    if(confirm('This will permanently erase your saved profile and portfolio from this browser. Continue?')){
+      State.resetAll();
+      UI.toast('All data reset');
+      Views.render(State.activeTab);
+      UI.updateScorePill();
+    }
+  }
+
+  return { updateProfileField, setPortfolioFilter, duplicatePolicy, archivePolicy, deletePolicy, runScenario, toggleFaq, exportCSV, exportJSON, importJSON, resetAll };
+})();
+
+/* ---------------------------------------------------------------------
+   BOOTSTRAP
+--------------------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', UI.init);
+</script>
+</body>
+</html>

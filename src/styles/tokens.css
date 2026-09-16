@@ -1,0 +1,161 @@
+/* Unified design token palette — light theme */
+:root {
+  --color-bg: #f8fafc;
+  --color-bg-secondary: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-sidebar: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-strong: rgba(0, 0, 0, 0.22);
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-accent: #f97316;
+  --color-accent-jade: #10b981;
+  --color-accent-blue: #3b82f6;
+  --color-accent-teal: #14b8a6;
+  --color-accent-amber: #f59e0b;
+  --color-accent-purple: #a855f7;
+  --color-red: #ef4444;
+  --color-green: #22c55e;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+/* Dark theme */
+.dark {
+  --color-bg: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-sidebar: #1e293b;
+  --color-border: #334155;
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Arctic Calm — icy blue palette, light base */
+[data-theme='arctic-calm'] {
+  --color-bg: #e8f4f8;
+  --color-bg-secondary: #d4ecf5;
+  --color-surface: #f0f8fc;
+  --color-surface-hover: #d4ecf5;
+  --color-sidebar: #cce7f0;
+  --color-border: #99cce0;
+  --color-border-strong: rgba(0, 60, 90, 0.3);
+  --color-text: #0c2a3a;
+  --color-text-secondary: #1a4a60;
+  --color-text-muted: #4a7a90;
+  --color-accent: #0288d1;
+  --color-accent-jade: #00897b;
+  --color-accent-blue: #0277bd;
+  --color-accent-teal: #00bcd4;
+  --color-accent-amber: #0097a7;
+  --color-accent-purple: #5c6bc0;
+  --color-red: #e53935;
+  --color-green: #00897b;
+  --shadow-sm: 0 1px 3px rgba(0, 60, 90, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 60, 90, 0.1);
+}
+
+/* Aurora Pulse — neon pink/green on near-black, dark base */
+[data-theme='aurora-pulse'] {
+  --color-bg: #050712;
+  --color-bg-secondary: #0d1128;
+  --color-surface: #0d1128;
+  --color-surface-hover: #1a2040;
+  --color-sidebar: #080d1f;
+  --color-border: #1f2d5a;
+  --color-border-strong: rgba(180, 80, 255, 0.3);
+  --color-text: #e8e8ff;
+  --color-text-secondary: #9090cc;
+  --color-text-muted: #5555aa;
+  --color-accent: #c040ff;
+  --color-accent-jade: #00ff9d;
+  --color-accent-blue: #00b4ff;
+  --color-accent-teal: #00ffe0;
+  --color-accent-amber: #ffaa00;
+  --color-accent-purple: #c040ff;
+  --color-red: #ff4080;
+  --color-green: #00ff9d;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 8px rgba(192, 64, 255, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 24px rgba(192, 64, 255, 0.1);
+}
+
+/* Retro Radar — phosphor green terminal on black, dark base */
+[data-theme='retro-radar'] {
+  --color-bg: #000000;
+  --color-bg-secondary: #0a0a0a;
+  --color-surface: #0a0a0a;
+  --color-surface-hover: #111600;
+  --color-sidebar: #050500;
+  --color-border: #1a2800;
+  --color-border-strong: rgba(0, 255, 65, 0.25);
+  --color-text: #00ff41;
+  --color-text-secondary: #00cc33;
+  --color-text-muted: #007722;
+  --color-accent: #00ff41;
+  --color-accent-jade: #00ff41;
+  --color-accent-blue: #00aaff;
+  --color-accent-teal: #00ffcc;
+  --color-accent-amber: #ffdd00;
+  --color-accent-purple: #cc00ff;
+  --color-red: #ff2200;
+  --color-green: #00ff41;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 255, 65, 0.1);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 255, 65, 0.08);
+}
+
+/* Solar Flare — warm amber/gold on deep charcoal, dark base */
+[data-theme='solar-flare'] {
+  --color-bg: #1a1000;
+  --color-bg-secondary: #221500;
+  --color-surface: #2a1a00;
+  --color-surface-hover: #362200;
+  --color-sidebar: #1e1200;
+  --color-border: #3d2600;
+  --color-border-strong: rgba(255, 160, 0, 0.25);
+  --color-text: #ffe8c0;
+  --color-text-secondary: #cc9960;
+  --color-text-muted: #886633;
+  --color-accent: #ff8c00;
+  --color-accent-jade: #88cc44;
+  --color-accent-blue: #4499ff;
+  --color-accent-teal: #44ccaa;
+  --color-accent-amber: #ffcc00;
+  --color-accent-purple: #cc66ff;
+  --color-red: #ff4422;
+  --color-green: #88cc44;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 8px rgba(255, 140, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 24px rgba(255, 140, 0, 0.1);
+}
+
+/* Tropical Breeze — sandy beige + teal + coral, light base */
+[data-theme='tropical-breeze'] {
+  --color-bg: #faf5ec;
+  --color-bg-secondary: #f0e8d5;
+  --color-surface: #fffdf6;
+  --color-surface-hover: #f0e8d5;
+  --color-sidebar: #e8e0d0;
+  --color-border: #d0c8b0;
+  --color-border-strong: rgba(40, 100, 80, 0.25);
+  --color-text: #1a3325;
+  --color-text-secondary: #2d5540;
+  --color-text-muted: #6b8c70;
+  --color-accent: #ff6b4a;
+  --color-accent-jade: #00897b;
+  --color-accent-blue: #0077bb;
+  --color-accent-teal: #00968a;
+  --color-accent-amber: #f0a830;
+  --color-accent-purple: #9c55cc;
+  --color-red: #e53935;
+  --color-green: #00897b;
+  --shadow-sm: 0 1px 3px rgba(20, 50, 30, 0.06);
+  --shadow-md: 0 4px 16px rgba(20, 50, 30, 0.08);
+}

@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SG PropSmart Pro — Singapore Property Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@600;700&display=swap');
+
+  :root {
+    --bg: #f5f4f0;
+    --bg2: #eceae4;
+    --bg3: #e3e0d8;
+    --surface: #ffffff;
+    --surface2: #faf9f7;
+    --border: #d8d5cc;
+    --text: #1a1916;
+    --text2: #4a4840;
+    --text3: #7a7870;
+    --accent: #c8553d;
+    --accent2: #e8734a;
+    --green: #3a7d44;
+    --green-bg: #e8f5ea;
+    --amber: #b8860b;
+    --amber-bg: #fef9e7;
+    --red: #c0392b;
+    --red-bg: #fdf0ed;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --transition: 0.2s ease;
+    --font-mono: 'DM Mono', monospace;
+    --font-sans: 'DM Sans', sans-serif;
+    --font-display: 'Playfair Display', serif;
+  }
+  .dark {
+    --bg: #0f0e0c;
+    --bg2: #1a1916;
+    --bg3: #232220;
+    --surface: #1e1d1b;
+    --surface2: #242220;
+    --border: #2e2c28;
+    --text: #f0ede6;
+    --text2: #b8b4a8;
+    --text3: #7a7870;
+    --green-bg: #0f2213;
+    --amber-bg: #1a1500;
+    --red-bg: #1a0a08;
+    --blue-bg: #0c1a33;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    background: var(--text);
+    color: var(--bg);
+    padding: 0 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 48px;
+    position: sticky; top: 0; z-index: 200;
+  }
+  .topbar-brand { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: -0.01em; }
+  .topbar-brand span { color: var(--accent2); }
+  .topbar-actions { display: flex; gap: 0.5rem; align-items: center; }
+  .topbar-btn {
+    background: rgba(255,255,255,0.1); border: none; color: inherit;
+    padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;
+    transition: background var(--transition);
+  }
+  .topbar-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* ─── LIVE SUMMARY BAR ─── */
+  .summary-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 1.5rem;
+    display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;
+    position: sticky; top: 48px; z-index: 190;
+    box-shadow: var(--shadow);
+  }
+  .sum-item { display: flex; flex-direction: column; gap: 0.1rem; }
+  .sum-label { font-size: 0.65rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-mono); }
+  .sum-val { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 500; color: var(--text); }
+  .sum-val.good { color: var(--green); }
+  .sum-val.warn { color: var(--amber); }
+  .sum-val.bad { color: var(--red); }
+
+  /* ─── TABS ─── */
+  .tab-nav {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    display: flex; gap: 0; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 0.75rem 1.1rem;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;
+    border: none; background: none; color: var(--text3); cursor: pointer;
+    border-bottom: 2px solid transparent; white-space: nowrap;
+    transition: color var(--transition), border-color var(--transition);
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+  /* ─── CONTENT ─── */
+  .tab-content { display: none; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* ─── GRID ─── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+  @media(max-width:768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+  @media(max-width:1024px) {
+    .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3);
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  /* ─── FORM ELEMENTS ─── */
+  .form-row { margin-bottom: 0.85rem; }
+  .form-row label { display: block; font-size: 0.72rem; color: var(--text2); margin-bottom: 0.3rem; font-weight: 500; }
+  .form-row label .tip {
+    display: inline-block; width: 14px; height: 14px; background: var(--bg3);
+    border-radius: 50%; text-align: center; line-height: 14px; font-size: 0.65rem;
+    cursor: help; color: var(--text3); margin-left: 0.3rem;
+    position: relative;
+  }
+  .form-row label .tip:hover::after {
+    content: attr(data-tip);
+    position: absolute; left: 50%; top: 120%; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 0.4rem 0.6rem;
+    border-radius: 6px; font-size: 0.68rem; white-space: nowrap; z-index: 999;
+    font-style: normal; line-height: 1.4; max-width: 220px; white-space: normal;
+  }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.75rem;
+    font-family: var(--font-mono); font-size: 0.82rem;
+    outline: none; transition: border-color var(--transition), box-shadow var(--transition);
+    appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,85,61,0.12); }
+  .input-group { display: flex; gap: 0.5rem; }
+  .input-prefix {
+    background: var(--bg3); border: 1px solid var(--border); border-right: none;
+    padding: 0.55rem 0.7rem; border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.8rem; color: var(--text3);
+    white-space: nowrap; display: flex; align-items: center;
+  }
+  .input-group input { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .radio-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .radio-btn {
+    padding: 0.4rem 0.8rem; border: 1px solid var(--border);
+    border-radius: 20px; font-size: 0.75rem; cursor: pointer;
+    transition: all var(--transition); background: var(--bg2); color: var(--text2);
+    font-family: var(--font-mono);
+  }
+  .radio-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  input[type=range] {
+    background: none; border: none; padding: 0.4rem 0;
+    accent-color: var(--accent);
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: none;
+    cursor: pointer; font-family: var(--font-mono); font-size: 0.78rem;
+    font-weight: 500; letter-spacing: 0.02em; transition: all var(--transition);
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,85,61,0.3); }
+  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg2); }
+  .btn-ghost { background: none; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg2); color: var(--text); }
+
+  /* ─── RESULT BOXES ─── */
+  .result-box {
+    background: var(--bg2); border-radius: var(--radius-sm); padding: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .result-box.green { border-left-color: var(--green); background: var(--green-bg); }
+  .result-box.amber { border-left-color: var(--amber); background: var(--amber-bg); }
+  .result-box.red { border-left-color: var(--red); background: var(--red-bg); }
+  .result-box.blue { border-left-color: var(--blue); background: var(--blue-bg); }
+  .result-label { font-size: 0.68rem; color: var(--text3); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+  .result-val { font-family: var(--font-mono); font-size: 1.35rem; font-weight: 500; color: var(--text); margin-top: 0.2rem; }
+  .result-sub { font-size: 0.72rem; color: var(--text3); margin-top: 0.15rem; }
+
+  /* ─── STAT GRID ─── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
+  .stat-item { background: var(--bg2); border-radius: var(--radius-sm); padding: 0.85rem; border: 1px solid var(--border); }
+  .stat-item .s-label { font-size: 0.65rem; color: var(--text3); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-item .s-val { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 500; color: var(--text); margin-top: 0.25rem; }
+  .stat-item .s-sub { font-size: 0.68rem; color: var(--text3); margin-top: 0.1rem; }
+
+  /* ─── BADGES ─── */
+  .badge {
+    display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px;
+    font-size: 0.68rem; font-family: var(--font-mono); font-weight: 500;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-gray { background: var(--bg3); color: var(--text3); }
+
+  /* ─── PROGRESS BAR ─── */
+  .prog-bar { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-top: 0.3rem; }
+  .prog-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .prog-fill.green { background: var(--green); }
+  .prog-fill.amber { background: var(--amber); }
+  .prog-fill.red { background: var(--red); }
+  .prog-fill.accent { background: var(--accent); }
+
+  /* ─── TABLE ─── */
+  .data-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.75rem; }
+  .data-table th { text-align: left; padding: 0.5rem 0.6rem; color: var(--text3); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--border); color: var(--text2); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg2); }
+  .table-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+
+  /* ─── CANVAS CHART ─── */
+  .chart-wrap { position: relative; width: 100%; }
+  canvas { width: 100% !important; }
+
+  /* ─── INSIGHT CARDS ─── */
+  .insight {
+    padding: 0.75rem 1rem; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); margin-bottom: 0.5rem;
+    display: flex; gap: 0.6rem; align-items: flex-start;
+    background: var(--surface);
+  }
+  .insight-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+  .insight-text { font-size: 0.78rem; color: var(--text2); line-height: 1.5; }
+  .insight-text strong { color: var(--text); display: block; margin-bottom: 0.15rem; font-size: 0.8rem; }
+
+  /* ─── WARNING BANNER ─── */
+  .warning-banner {
+    padding: 0.65rem 1rem; border-radius: var(--radius-sm);
+    font-size: 0.75rem; font-family: var(--font-mono);
+    display: flex; gap: 0.5rem; align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .warning-banner.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(184,134,11,0.2); }
+  .warning-banner.red { background: var(--red-bg); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+  .warning-banner.green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(58,125,68,0.2); }
+
+  /* ─── COMPARE TABLE ─── */
+  .compare-table { width: 100%; border-collapse: collapse; }
+  .compare-table th { background: var(--bg3); padding: 0.75rem 1rem; text-align: center; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text2); border: 1px solid var(--border); }
+  .compare-table th:first-child { text-align: left; }
+  .compare-table td { padding: 0.65rem 1rem; border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.78rem; text-align: center; }
+  .compare-table td:first-child { text-align: left; color: var(--text3); font-size: 0.72rem; }
+  .compare-table tr:nth-child(even) td { background: var(--bg2); }
+  .best { color: var(--green); font-weight: 600; }
+  .worst { color: var(--red); }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header { margin-bottom: 1.25rem; }
+  .section-title { font-family: var(--font-display); font-size: 1.4rem; color: var(--text); }
+  .section-sub { font-size: 0.78rem; color: var(--text3); margin-top: 0.2rem; font-family: var(--font-mono); }
+
+  /* ─── DIVIDER ─── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+  /* ─── AFFORDABILITY METER ─── */
+  .afford-meter { border-radius: var(--radius-sm); overflow: hidden; height: 12px; display: flex; margin: 0.5rem 0; }
+  .afford-seg { height: 100%; flex: 1; }
+  .afford-pointer { position: relative; }
+  .afford-pointer::after { content: '▼'; position: absolute; top: -18px; font-size: 0.7rem; transform: translateX(-50%); }
+
+  /* ─── RISK GAUGE ─── */
+  .risk-gauge { display: flex; align-items: center; gap: 1rem; }
+  .gauge-track { flex: 1; height: 10px; border-radius: 5px; background: linear-gradient(to right, var(--green), var(--amber), var(--red)); position: relative; }
+  .gauge-needle { position: absolute; top: -3px; width: 4px; height: 16px; background: var(--text); border-radius: 2px; transform: translateX(-50%); transition: left 0.5s ease; }
+  .gauge-score { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 500; min-width: 3ch; }
+
+  /* ─── AMORTIZATION CHART ─── */
+  .chart-container { background: var(--bg2); border-radius: var(--radius-sm); padding: 1rem; border: 1px solid var(--border); }
+
+  /* ─── SCROLLABLE ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+
+  /* ─── MISC ─── */
+  .mt1 { margin-top: 1rem; }
+  .mt2 { margin-top: 1.5rem; }
+  .mb1 { margin-bottom: 1rem; }
+  .flex { display: flex; }
+  .flex-center { display: flex; align-items: center; }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; }
+  .gap05 { gap: 0.5rem; }
+  .gap1 { gap: 1rem; }
+  .text-right { text-align: right; }
+  .text-sm { font-size: 0.78rem; color: var(--text3); }
+  .text-mono { font-family: var(--font-mono); }
+  .disclaimer { font-size: 0.68rem; color: var(--text3); line-height: 1.6; padding: 0.75rem; background: var(--bg2); border-radius: var(--radius-sm); border: 1px solid var(--border); font-family: var(--font-mono); margin-top: 1rem; }
+  .col-span-2 { grid-column: span 2; }
+  @media(max-width:768px) { .col-span-2 { grid-column: span 1; } }
+  .upgrade-arrow { font-size: 1.5rem; text-align: center; color: var(--text3); padding: 0.25rem; }
+  .print-only { display: none; }
+  @media print { .topbar,.tab-nav,.summary-bar,.topbar-actions { display: none !important; } .tab-content { display: block !important; } .print-only { display: block; } }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">PropSmart <span>Pro</span></div>
+  <div class="topbar-actions">
+    <button class="topbar-btn" onclick="saveScenario()">💾 Save</button>
+    <button class="topbar-btn" onclick="loadScenario()">📂 Load</button>
+    <button class="topbar-btn" onclick="resetAll()">↺ Reset</button>
+    <button class="topbar-btn" onclick="window.print()">🖨️ Print</button>
+    <button class="topbar-btn" id="darkBtn" onclick="toggleDark()">🌙 Dark</button>
+  </div>
+</div>
+
+<!-- LIVE SUMMARY BAR -->
+<div class="summary-bar" id="summaryBar">
+  <div class="sum-item">
+    <div class="sum-label">Monthly Income</div>
+    <div class="sum-val" id="sum-income">$6,000</div>
+  </div>
+  <div class="sum-item">
+    <div class="sum-label">Max Loan</div>
+    <div class="sum-val" id="sum-loan">$0</div>
+  </div>
+  <div class="sum-item">
+    <div class="sum-label">Monthly Mortgage</div>
+    <div class="sum-val" id="sum-mortgage">$0</div>
+  </div>
+  <div class="sum-item">
+    <div class="sum-label">TDSR/MSR</div>
+    <div class="sum-val" id="sum-tdsr">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="sum-label">Affordability</div>
+    <div class="sum-val" id="sum-afford">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="sum-label">Risk Score</div>
+    <div class="sum-val" id="sum-risk">—</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-nav" id="tabNav">
+  <button class="tab-btn active" onclick="switchTab('profile')">① Profile</button>
+  <button class="tab-btn" onclick="switchTab('bto')">② HDB BTO</button>
+  <button class="tab-btn" onclick="switchTab('resale')">③ HDB Resale</button>
+  <button class="tab-btn" onclick="switchTab('private')">④ Private</button>
+  <button class="tab-btn" onclick="switchTab('compare')">⑤ Compare</button>
+  <button class="tab-btn" onclick="switchTab('dashboard')">⑥ Dashboard</button>
+</div>
+
+<!-- ===================== TAB: PROFILE ===================== -->
+<div class="tab-content active" id="tab-profile">
+  <div class="section-header">
+    <div class="section-title">Your Financial Profile</div>
+    <div class="section-sub">Fill this once — all modules update automatically lah</div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Personal -->
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Personal Info</div>
+      <div class="grid-2">
+        <div class="form-row">
+          <label>Age</label>
+          <input type="number" id="p-age" value="30" min="21" max="65" oninput="profileChanged()">
+        </div>
+        <div class="form-row">
+          <label>Citizenship</label>
+          <select id="p-citizen" onchange="profileChanged()">
+            <option value="SC">Singapore Citizen (SC)</option>
+            <option value="PR">Permanent Resident (PR)</option>
+            <option value="FG">Foreigner</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Marital Status</label>
+          <select id="p-marital" onchange="profileChanged()">
+            <option value="married">Married</option>
+            <option value="engaged">Engaged / Fiancé(e)</option>
+            <option value="single">Single</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>First-Timer?</label>
+          <select id="p-firsttimer" onchange="profileChanged()">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Dependents</label>
+          <input type="number" id="p-deps" value="0" min="0" max="10" oninput="profileChanged()">
+        </div>
+        <div class="form-row">
+          <label>Credit Score</label>
+          <select id="p-credit" onchange="profileChanged()">
+            <option value="good">Good (AA–BB)</option>
+            <option value="avg">Average (CC–DD)</option>
+            <option value="poor">Poor (EE–HH)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Income -->
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Income & Savings</div>
+      <div class="form-row">
+        <label>Monthly Gross Household Income ($)</label>
+        <div class="input-group"><div class="input-prefix">$</div><input type="number" id="p-income" value="6000" min="0" oninput="profileChanged()"></div>
+      </div>
+      <div class="form-row">
+        <label>Annual Bonus ($) <span class="tip" data-tip="Average bonus per year">?</span></label>
+        <div class="input-group"><div class="input-prefix">$</div><input type="number" id="p-bonus" value="0" min="0" oninput="profileChanged()"></div>
+      </div>
+      <div class="form-row">
+        <label>CPF OA Balance ($)</label>
+        <div class="input-group"><div class="input-prefix">$</div><input type="number" id="p-cpf" value="80000" min="0" oninput="profileChanged()"></div>
+      </div>
+      <div class="form-row">
+        <label>CPF Contribution Rate (% of salary)</label>
+        <input type="number" id="p-cpfrate" value="23" min="0" max="37" oninput="profileChanged()">
+      </div>
+      <div class="form-row">
+        <label>Cash Savings ($)</label>
+        <div class="input-group"><div class="input-prefix">$</div><input type="number" id="p-cash" value="30000" min="0" oninput="profileChanged()"></div>
+      </div>
+      <div class="form-row">
+        <label>Other Investments ($)</label>
+        <div class="input-group"><div class="input-prefix">$</div><input type="number" id="p-invest" value="0" min="0" oninput="profileChanged()"></div>
+      </div>
+      <div class="form-row">
+        <label>Existing Monthly Loan Commitments ($) <span class="tip" data-tip="Car loan, personal loan, credit card min payment, etc.">?</span></label>
+        <div class="input-group"><div class="input-prefix">$</div><input type="number" id="p-loans" value="0" min="0" oninput="profileChanged()"></div>
+      </div>
+    </div>
+
+    <!-- Loan Preferences -->
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Loan Preferences</div>
+      <div class="form-row">
+        <label>Preferred Loan Type</label>
+        <select id="p-loantype" onchange="profileChanged()">
+          <option value="hdb">HDB Concessionary Loan (2.6%)</option>
+          <option value="bank">Bank Loan (market rate)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Risk Tolerance</label>
+        <div class="radio-group" id="rg-risk">
+          <div class="radio-btn active" data-val="conservative" onclick="setRadio('rg-risk','p-risktol',this)">Conservative</div>
+          <div class="radio-btn" data-val="moderate" onclick="setRadio('rg-risk','p-risktol',this)">Moderate</div>
+          <div class="radio-btn" data-val="aggressive" onclick="setRadio('rg-risk','p-risktol',this)">Aggressive</div>
+        </div>
+        <input type="hidden" id="p-risktol" value="conservative">
+      </div>
+      <div class="form-row">
+        <label>Monthly Living Expenses ($) <span class="tip" data-tip="Exclude mortgage — food, transport, utilities, etc.">?</span></label>
+        <div class="input-group"><div class="input-prefix">$</div><input type="number" id="p-expenses" value="2000" min="0" oninput="profileChanged()"></div>
+      </div>
+    </div>
+
+    <!-- Auto-calculated summary -->
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Auto-Calculated</div>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="s-label">CPF Monthly Contribution</div>
+          <div class="s-val" id="auto-cpf-monthly">$1,380</div>
+          <div class="s-sub">23% × income</div>
+        </div>
+        <div class="stat-item">
+          <div class="s-label">Net After Commitments</div>
+          <div class="s-val" id="auto-net">$4,620</div>
+          <div class="s-sub">Income − loans</div>
+        </div>
+        <div class="stat-item">
+          <div class="s-label">Total Liquid Assets</div>
+          <div class="s-val" id="auto-liquid">$110,000</div>
+          <div class="s-sub">CPF OA + Cash</div>
+        </div>
+        <div class="stat-item">
+          <div class="s-label">Cash Buffer (months)</div>
+          <div class="s-val" id="auto-buffer">15</div>
+          <div class="s-sub">Cash ÷ expenses</div>
+        </div>
+        <div class="stat-item">
+          <div class="s-label">Max MSR Payment</div>
+          <div class="s-val" id="auto-msr">$1,500</div>
+          <div class="s-sub">25% of income</div>
+        </div>
+        <div class="stat-item">
+          <div class="s-label">Max TDSR Payment</div>
+          <div class="s-val" id="auto-tdsr">$1,680</div>
+          <div class="s-sub">55% − existing loans</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB: HDB BTO ===================== -->
+<div class="tab-content" id="tab-bto">
+  <div class="section-header">
+    <div class="section-title">HDB BTO Calculator</div>
+    <div class="section-sub">Build-To-Order — balloting, grants, progressive payment & more</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>BTO Details</div>
+        <div class="form-row">
+          <label>Flat Type</label>
+          <select id="bto-flattype" onchange="calcBTO()">
+            <option value="2room">2-Room Flexi</option>
+            <option value="3room">3-Room</option>
+            <option value="4room" selected>4-Room</option>
+            <option value="5room">5-Room</option>
+            <option value="ec">Executive Condo (EC)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>BTO Location / Estate</label>
+          <select id="bto-estate" onchange="calcBTO()">
+            <option value="mature">Mature Estate</option>
+            <option value="nonmature">Non-Mature Estate</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Estimated Purchase Price ($)</label>
+          <div class="input-group"><div class="input-prefix">$</div><input type="number" id="bto-price" value="450000" oninput="calcBTO()"></div>
+        </div>
+        <div class="form-row">
+          <label>Loan Tenure (years)</label>
+          <input type="range" id="bto-tenure" min="5" max="25" value="25" oninput="calcBTO(); document.getElementById('bto-tenure-val').textContent=this.value">
+          <div class="flex-between text-sm mt1"><span>5 yrs</span><span id="bto-tenure-val" class="text-mono">25</span><span>25 yrs</span></div>
+        </div>
+        <div class="form-row">
+          <label>Interest Rate (%) <span class="tip" data-tip="HDB loan is 2.6% (pegged to CPF OA + 0.1%). Bank varies.">?</span></label>
+          <input type="number" id="bto-rate" value="2.6" step="0.05" oninput="calcBTO()">
+        </div>
+        <div class="form-row">
+          <label>Living near parents? (PHG)</label>
+          <select id="bto-phg" onchange="calcBTO()">
+            <option value="yes">Yes — within 4km</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grants -->
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Grant Eligibility
+          <button class="btn btn-ghost" style="margin-left:auto;font-size:0.7rem;padding:0.2rem 0.6rem" onclick="calcBTO()">Recalculate</button>
+        </div>
+        <div id="bto-grants-output">
+          <div class="text-sm">Calculating...</div>
+        </div>
+        <div class="form-row mt1">
+          <label>Grant Sensitivity — Income Slider ($)</label>
+          <input type="range" id="bto-inc-slider" min="1000" max="14000" value="6000" oninput="btoSliderUpdate(this.value)">
+          <div class="flex-between text-sm mt1"><span>$1k</span><span id="bto-slider-val" class="text-mono">$6,000</span><span>$14k</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Results -->
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Financial Breakdown</div>
+        <div id="bto-results"></div>
+      </div>
+
+      <!-- Warnings & Insights -->
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Eligibility & Warnings</div>
+        <div id="bto-warnings"></div>
+      </div>
+
+      <!-- Progressive Payment -->
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Progressive Payment Timeline</div>
+        <div id="bto-progressive"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB: HDB RESALE ===================== -->
+<div class="tab-content" id="tab-resale">
+  <div class="section-header">
+    <div class="section-title">HDB Resale Calculator</div>
+    <div class="section-sub">Valuation gaps, COV, lease decay, and grant analysis</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Property Details</div>
+        <div class="form-row">
+          <label>Resale Price ($)</label>
+          <div class="input-group"><div class="input-prefix">$</div><input type="number" id="rs-price" value="550000" oninput="calcResale()"></div>
+        </div>
+        <div class="form-row">
+          <label>Estimated HDB Valuation ($) <span class="tip" data-tip="Get from HDB or engage a valuer. COV = Resale Price − Valuation.">?</span></label>
+          <div class="input-group"><div class="input-prefix">$</div><input type="number" id="rs-val" value="520000" oninput="calcResale()"></div>
+        </div>
+        <div class="form-row">
+          <label>Remaining Lease (years)</label>
+          <input type="number" id="rs-lease" value="72" min="20" max="99" oninput="calcResale()">
+        </div>
+        <div class="form-row">
+          <label>Flat Type</label>
+          <select id="rs-flattype" onchange="calcResale()">
+            <option value="3room">3-Room</option>
+            <option value="4room" selected>4-Room</option>
+            <option value="5room">5-Room</option>
+            <option value="ea">EA/Maisonette</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Loan Tenure (years)</label>
+          <input type="number" id="rs-tenure" value="25" min="5" max="25" oninput="calcResale()">
+        </div>
+        <div class="form-row">
+          <label>Interest Rate (%)</label>
+          <input type="number" id="rs-rate" value="2.6" step="0.05" oninput="calcResale()">
+        </div>
+        <div class="form-row">
+          <label>Living near parents? (PHG)</label>
+          <select id="rs-phg" onchange="calcResale()">
+            <option value="yes">Yes — within 4km</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Results & Analysis</div>
+        <div id="rs-results"></div>
+      </div>
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Lease Analysis</div>
+        <div id="rs-lease-analysis"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Grant Breakdown</div>
+        <div id="rs-grants"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB: PRIVATE ===================== -->
+<div class="tab-content" id="tab-private">
+  <div class="section-header">
+    <div class="section-title">Private Property Calculator</div>
+    <div class="section-sub">Condo, landed, new launch — ABSD, BSD, TDSR and full cost breakdown</div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Property Details</div>
+        <div class="form-row">
+          <label>Property Type</label>
+          <select id="pv-type" onchange="calcPrivate()">
+            <option value="new_condo">New Launch Condo</option>
+            <option value="resale_condo" selected>Resale Condo</option>
+            <option value="landed">Landed Property</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Purchase Price ($)</label>
+          <div class="input-group"><div class="input-prefix">$</div><input type="number" id="pv-price" value="1200000" oninput="calcPrivate()"></div>
+        </div>
+        <div class="form-row">
+          <label>Loan Tenure (years)</label>
+          <input type="number" id="pv-tenure" value="30" min="5" max="30" oninput="calcPrivate()">
+        </div>
+        <div class="form-row">
+          <label>Interest Rate (%)</label>
+          <input type="number" id="pv-rate" value="3.5" step="0.05" oninput="calcPrivate()">
+        </div>
+        <div class="form-row">
+          <label>Existing Property Owned?</label>
+          <select id="pv-existing" onchange="calcPrivate()">
+            <option value="0">No (1st property)</option>
+            <option value="1">Yes (2nd property)</option>
+            <option value="2">Yes (3rd+ property)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Buyer Citizenship</label>
+          <select id="pv-citizen" onchange="calcPrivate()">
+            <option value="SC">Singapore Citizen</option>
+            <option value="PR">Permanent Resident</option>
+            <option value="FG">Foreigner</option>
+            <option value="ENTITY">Entity / Company</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stress Test -->
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Interest Rate Stress Test</div>
+        <div id="pv-stress"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Cost Breakdown</div>
+        <div id="pv-results"></div>
+      </div>
+      <div class="card mb1">
+        <div class="card-title"><div class="dot"></div>Stamp Duties (BSD + ABSD)</div>
+        <div id="pv-stamp"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Rent vs Buy Analysis</div>
+        <div class="form-row">
+          <label>Comparable Monthly Rent ($)</label>
+          <div class="input-group"><div class="input-prefix">$</div><input type="number" id="rvb-rent" value="4500" oninput="calcRvB()"></div>
+        </div>
+        <div class="form-row">
+          <label>Expected Annual Appreciation (%)</label>
+          <input type="number" id="rvb-apprec" value="3" step="0.5" oninput="calcRvB()">
+        </div>
+        <div class="form-row">
+          <label>Holding Period (years)</label>
+          <input type="number" id="rvb-years" value="10" min="1" max="30" oninput="calcRvB()">
+        </div>
+        <div id="rvb-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Amortization section -->
+  <div class="card mt2">
+    <div class="card-title"><div class="dot"></div>Amortization Schedule
+      <div style="margin-left:auto;display:flex;gap:0.5rem">
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.25rem 0.6rem" onclick="setAmorView('monthly')">Monthly</button>
+        <button class="btn btn-ghost" style="font-size:0.7rem;padding:0.25rem 0.6rem" onclick="setAmorView('yearly')">Yearly</button>
+      </div>
+    </div>
+    <div class="grid-2 mt1">
+      <div class="chart-container">
+        <div style="font-size:0.7rem;color:var(--text3);font-family:var(--font-mono);margin-bottom:0.5rem">LOAN BALANCE OVER TIME</div>
+        <canvas id="balanceChart" height="180"></canvas>
+      </div>
+      <div class="chart-container">
+        <div style="font-size:0.7rem;color:var(--text3);font-family:var(--font-mono);margin-bottom:0.5rem">PRINCIPAL vs INTEREST</div>
+        <canvas id="piChart" height="180"></canvas>
+      </div>
+    </div>
+    <div class="mt1 table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Year</th><th>Monthly Payment</th><th>Principal Paid</th><th>Interest Paid</th><th>Balance</th><th>Progress</th></tr></thead>
+        <tbody id="amortTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB: COMPARE ===================== -->
+<div class="tab-content" id="tab-compare">
+  <div class="section-header">
+    <div class="section-title">Side-by-Side Comparison</div>
+    <div class="section-sub">BTO vs Resale vs Private — the real numbers, no fluff</div>
+  </div>
+
+  <div class="card mb1">
+    <div class="card-title"><div class="dot"></div>Configure Scenarios</div>
+    <div class="grid-3">
+      <div>
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:0.75rem;font-family:var(--font-mono)">🏗️ BTO / HDB</div>
+        <div class="form-row"><label>Price ($)</label><div class="input-group"><div class="input-prefix">$</div><input type="number" id="cmp-bto-price" value="450000" oninput="calcCompare()"></div></div>
+        <div class="form-row"><label>Tenure (yrs)</label><input type="number" id="cmp-bto-tenure" value="25" oninput="calcCompare()"></div>
+        <div class="form-row"><label>Rate (%)</label><input type="number" id="cmp-bto-rate" value="2.6" step="0.05" oninput="calcCompare()"></div>
+      </div>
+      <div>
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:0.75rem;font-family:var(--font-mono)">🏠 HDB Resale</div>
+        <div class="form-row"><label>Price ($)</label><div class="input-group"><div class="input-prefix">$</div><input type="number" id="cmp-rs-price" value="550000" oninput="calcCompare()"></div></div>
+        <div class="form-row"><label>Tenure (yrs)</label><input type="number" id="cmp-rs-tenure" value="25" oninput="calcCompare()"></div>
+        <div class="form-row"><label>Rate (%)</label><input type="number" id="cmp-rs-rate" value="2.6" step="0.05" oninput="calcCompare()"></div>
+      </div>
+      <div>
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:0.75rem;font-family:var(--font-mono)">🏙️ Private Condo</div>
+        <div class="form-row"><label>Price ($)</label><div class="input-group"><div class="input-prefix">$</div><input type="number" id="cmp-pv-price" value="1200000" oninput="calcCompare()"></div></div>
+        <div class="form-row"><label>Tenure (yrs)</label><input type="number" id="cmp-pv-tenure" value="30" oninput="calcCompare()"></div>
+        <div class="form-row"><label>Rate (%)</label><input type="number" id="cmp-pv-rate" value="3.5" step="0.05" oninput="calcCompare()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb1">
+    <div class="card-title"><div class="dot"></div>Comparison Table</div>
+    <div style="overflow-x:auto">
+      <table class="compare-table" id="compareTable">
+        <thead>
+          <tr><th>Metric</th><th>🏗️ BTO/HDB</th><th>🏠 Resale HDB</th><th>🏙️ Private</th></tr>
+        </thead>
+        <tbody id="compareBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Recommendation</div>
+    <div id="compareRec"></div>
+  </div>
+</div>
+
+<!-- ===================== TAB: DASHBOARD ===================== -->
+<div class="tab-content" id="tab-dashboard">
+  <div class="section-header">
+    <div class="section-title">Financial Dashboard</div>
+    <div class="section-sub">Your complete property purchase health check</div>
+  </div>
+
+  <div class="grid-4 mb1">
+    <div class="card">
+      <div class="s-label" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Net Worth (Post Purchase)</div>
+      <div class="s-val" style="font-family:var(--font-mono);font-size:1.5rem;font-weight:500;margin-top:0.4rem" id="db-networth">—</div>
+    </div>
+    <div class="card">
+      <div class="s-label" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Cash Remaining</div>
+      <div class="s-val" style="font-family:var(--font-mono);font-size:1.5rem;font-weight:500;margin-top:0.4rem" id="db-cash">—</div>
+    </div>
+    <div class="card">
+      <div class="s-label" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Monthly Stress Ratio</div>
+      <div class="s-val" style="font-family:var(--font-mono);font-size:1.5rem;font-weight:500;margin-top:0.4rem" id="db-stress">—</div>
+    </div>
+    <div class="card">
+      <div class="s-label" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em">Overall Risk Score</div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.4rem">
+        <div class="s-val" style="font-family:var(--font-mono);font-size:1.5rem;font-weight:500" id="db-riskscore">—</div>
+        <div id="db-riskbadge"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Gauge -->
+  <div class="card mb1">
+    <div class="card-title"><div class="dot"></div>Risk Gauge</div>
+    <div class="risk-gauge">
+      <div style="font-size:0.72rem;color:var(--green);font-family:var(--font-mono)">LOW</div>
+      <div class="gauge-track">
+        <div class="gauge-needle" id="gaugeNeedle" style="left:50%"></div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--red);font-family:var(--font-mono)">HIGH</div>
+      <div class="gauge-score" id="db-riskscore2">—</div>
+    </div>
+    <div class="mt1" id="db-riskflags"></div>
+  </div>
+
+  <!-- Upgrade Path -->
+  <div class="card mb1">
+    <div class="card-title"><div class="dot"></div>HDB Upgrade Path Simulator</div>
+    <div class="grid-2">
+      <div>
+        <div class="form-row"><label>Current HDB Price ($)</label><div class="input-group"><div class="input-prefix">$</div><input type="number" id="up-price" value="450000" oninput="calcUpgrade()"></div></div>
+        <div class="form-row"><label>Remaining HDB Loan ($)</label><div class="input-group"><div class="input-prefix">$</div><input type="number" id="up-loan" value="300000" oninput="calcUpgrade()"></div></div>
+        <div class="form-row"><label>CPF Used for HDB ($) <span class="tip" data-tip="CPF used + accrued interest must be refunded upon sale">?</span></label><div class="input-group"><div class="input-prefix">$</div><input type="number" id="up-cpfused" value="80000" oninput="calcUpgrade()"></div></div>
+        <div class="form-row"><label>Years of CPF Accrued Interest</label><input type="number" id="up-cpfyrs" value="5" min="0" max="25" oninput="calcUpgrade()"></div>
+        <div class="form-row"><label>Expected Sale Price ($)</label><div class="input-group"><div class="input-prefix">$</div><input type="number" id="up-saleprice" value="600000" oninput="calcUpgrade()"></div></div>
+      </div>
+      <div id="upgrade-results"></div>
+    </div>
+  </div>
+
+  <!-- Smart Insights -->
+  <div class="card mb1">
+    <div class="card-title"><div class="dot"></div>Smart Insights Engine</div>
+    <div id="insights-output"></div>
+  </div>
+
+  <!-- Assumptions panel -->
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Assumptions & Settings</div>
+    <div class="grid-3">
+      <div class="form-row"><label>HDB Loan Rate (%)</label><input type="number" id="set-hdbrate" value="2.6" step="0.1" oninput="updateSettings()"></div>
+      <div class="form-row"><label>MSR Limit (%)</label><input type="number" id="set-msr" value="30" oninput="updateSettings()"></div>
+      <div class="form-row"><label>TDSR Limit (%)</label><input type="number" id="set-tdsr" value="55" oninput="updateSettings()"></div>
+      <div class="form-row"><label>BSD Bracket 1 threshold ($)</label><input type="number" id="set-bsd1" value="180000" oninput="updateSettings()"></div>
+      <div class="form-row"><label>Max Bank LTV (%) <span class="tip" data-tip="Default 75% for first property">?</span></label><input type="number" id="set-ltv" value="75" oninput="updateSettings()"></div>
+      <div class="form-row"><label>HDB LTV (%)</label><input type="number" id="set-hdbltv" value="80" oninput="updateSettings()"></div>
+    </div>
+    <div class="disclaimer">
+      ⚠️ <strong>Disclaimer:</strong> This tool is for estimation purposes only and does not constitute financial or legal advice. Grant amounts, loan eligibility, and stamp duties are based on approximate rules as of 2024–2025. Always verify with HDB, CPF Board, or a licensed financial advisor before making any property decisions. Results may vary based on individual circumstances.
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// SETTINGS (editable via Assumptions panel)
+// ═══════════════════════════════════════════════
+const SETTINGS = {
+  hdbLoanRate: 2.6,
+  msrLimit: 30,
+  tdsrLimit: 55,
+  bsd1Threshold: 180000,
+  bankLTV: 75,
+  hdbLTV: 80,
+};
+
+// ═══════════════════════════════════════════════
+// CORE MATH UTILITIES
+// ═══════════════════════════════════════════════
+function monthlyPayment(principal, annualRate, tenureYears) {
+  if (principal <= 0) return 0;
+  const r = annualRate / 100 / 12;
+  const n = tenureYears * 12;
+  if (r === 0) return principal / n;
+  return principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+}
+
+function totalInterest(principal, annualRate, tenureYears) {
+  const mp = monthlyPayment(principal, annualRate, tenureYears);
+  return mp * tenureYears * 12 - principal;
+}
+
+function fmtDollar(n) {
+  if (isNaN(n)) return '$—';
+  return '$' + Math.round(n).toLocaleString('en-SG');
+}
+
+function fmtPct(n, dec = 1) {
+  if (isNaN(n)) return '—%';
+  return n.toFixed(dec) + '%';
+}
+
+function affordClass(pct) {
+  if (pct <= 25) return { cls: 'green', label: 'Comfortable' };
+  if (pct <= 35) return { cls: '', label: 'Manageable' };
+  if (pct <= 45) return { cls: 'amber', label: 'Stretch' };
+  return { cls: 'red', label: 'Risky' };
+}
+
+// ═══════════════════════════════════════════════
+// AMORTIZATION ENGINE
+// ═══════════════════════════════════════════════
+function buildAmortization(principal, annualRate, tenureYears) {
+  const r = annualRate / 100 / 12;
+  const n = tenureYears * 12;
+  const mp = monthlyPayment(principal, annualRate, tenureYears);
+  let balance = principal;
+  const schedule = [];
+  for (let i = 1; i <= n; i++) {
+    const interest = balance * r;
+    const princ = mp - interest;
+    balance -= princ;
+    if (balance < 0) balance = 0;
+    schedule.push({ month: i, year: Math.ceil(i / 12), payment: mp, principal: princ, interest, balance });
+  }
+  return schedule;
+}
+
+function buildYearlyAmort(sched) {
+  const years = {};
+  sched.forEach(m => {
+    if (!years[m.year]) years[m.year] = { year: m.year, payment: 0, principal: 0, interest: 0, balance: 0 };
+    years[m.year].payment += m.payment;
+    years[m.year].principal += m.principal;
+    years[m.year].interest += m.interest;
+    years[m.year].balance = m.balance;
+  });
+  return Object.values(years);
+}
+
+// ═══════════════════════════════════════════════
+// STAMP DUTY CALCULATIONS
+// ═══════════════════════════════════════════════
+function calcBSD(price) {
+  let bsd = 0;
+  const slabs = [
+    [180000, 0.01],
+    [180000, 0.02],
+    [640000, 0.03],
+    [500000, 0.04],
+    [1500000, 0.05],
+    [Infinity, 0.06],
+  ];
+  let rem = price;
+  for (const [slab, rate] of slabs) {
+    if (rem <= 0) break;
+    const taxable = Math.min(rem, slab);
+    bsd += taxable * rate;
+    rem -= taxable;
+  }
+  return bsd;
+}
+
+function calcABSD(price, citizenship, existingProps) {
+  // 2023 updated ABSD rates
+  const table = {
+    SC: [0, 0.20, 0.30],
+    PR: [0.05, 0.30, 0.35],
+    FG: [0.60, 0.60, 0.60],
+    ENTITY: [0.65, 0.65, 0.65],
+  };
+  const rates = table[citizenship] || table.FG;
+  const idx = Math.min(existingProps, 2);
+  return price * rates[idx];
+}
+
+// ═══════════════════════════════════════════════
+// GRANT LOGIC (HDB, 2024–2025 rules)
+// ═══════════════════════════════════════════════
+function calcGrants(income, citizenship, marital, firstTimer, flatType, phg, isBTO, estate) {
+  const grants = { ehg: 0, family: 0, phg: 0, singles: 0, total: 0, notes: [] };
+
+  const isCouple = (marital === 'married' || marital === 'engaged');
+  const isSingle = marital === 'single';
+  const isSC = citizenship === 'SC';
+  const isPR = citizenship === 'PR';
+  const isFirstTimer = firstTimer === 'yes';
+
+  if (!isSC && !isPR) {
+    grants.notes.push('Foreigners are not eligible for HDB grants.');
+    return grants;
+  }
+
+  // EHG — Enhanced CPF Housing Grant (BTO & Resale)
+  // Income ceiling: $9,000/month (couples), $4,500 (singles)
+  if (isSC && isFirstTimer) {
+    const ceiling = isCouple ? 9000 : 4500;
+    if (income <= ceiling) {
+      // EHG tiers (couples)
+      const ehgTiers = [
+        [1500, 80000], [2000, 75000], [2500, 70000], [3000, 65000],
+        [3500, 60000], [4000, 55000], [4500, 50000], [5000, 45000],
+        [5500, 40000], [6000, 35000], [6500, 30000], [7000, 25000],
+        [7500, 20000], [8000, 15000], [8500, 10000], [9000, 5000],
+      ];
+      const singleTiers = [
+        [750, 40000], [1000, 37500], [1250, 35000], [1500, 32500],
+        [1750, 30000], [2000, 27500], [2250, 25000], [2500, 22500],
+        [2750, 20000], [3000, 17500], [3250, 15000], [3500, 12500],
+        [3750, 10000], [4000, 7500], [4250, 5000], [4500, 2500],
+      ];
+      const tiers = isCouple ? ehgTiers : singleTiers;
+      for (const [cap, amt] of tiers) {
+        if (income <= cap) { grants.ehg = amt; break; }
+      }
+      grants.notes.push(`EHG: Eligible ${fmtDollar(grants.ehg)} (income ≤ ${fmtDollar(ceiling)} ceiling)`);
+    } else {
+      grants.notes.push('EHG: Income exceeds ceiling — not eligible.');
+    }
+  }
+
+  // Family Grant (Resale only)
+  if (!isBTO && isCouple && (isSC || isPR) && isFirstTimer) {
+    const fgCeiling = 14000;
+    if (income <= fgCeiling) {
+      // SC-SC: 50k (4-room & smaller), 40k (5-room+). SC-PR: 40k / 30k
+      const is5Room = ['5room', 'ea', 'ec'].includes(flatType);
+      if (isSC) grants.family = is5Room ? 40000 : 50000;
+      else if (isPR) grants.family = is5Room ? 30000 : 40000;
+      grants.notes.push(`Family Grant: ${fmtDollar(grants.family)} (${isSC ? 'SC-SC' : 'SC-PR'}, ${is5Room ? '5-room' : '≤4-room'})`);
+    } else {
+      grants.notes.push('Family Grant: Income exceeds $14,000 ceiling.');
+    }
+  }
+
+  // Proximity Housing Grant (PHG)
+  if (!isBTO && phg === 'yes' && isFirstTimer && isCouple && isSC) {
+    grants.phg = 30000;
+    grants.notes.push('PHG: $30,000 (buying near parents, within 4km)');
+  } else if (!isBTO && phg === 'yes' && isFirstTimer && isCouple && isPR) {
+    grants.phg = 20000;
+    grants.notes.push('PHG: $20,000 (PR buying near parents)');
+  }
+
+  // Singles Grant (Resale, 35+ years old)
+  // For now simplified
+  if (!isBTO && isSingle && isSC && isFirstTimer) {
+    const age = getVal('p-age');
+    if (age >= 35 && income <= 7000) {
+      const singleFgTiers = [[2500, 25000], [3500, 20000], [5000, 15000], [7000, 10000]];
+      for (const [cap, amt] of singleFgTiers) {
+        if (income <= cap) { grants.family = amt; break; }
+      }
+      grants.notes.push(`Singles Grant: ${fmtDollar(grants.family)} (age ≥ 35, resale)`);
+    }
+  }
+
+  grants.total = grants.ehg + grants.family + grants.phg + grants.singles;
+  return grants;
+}
+
+// ═══════════════════════════════════════════════
+// PROFILE HELPERS
+// ═══════════════════════════════════════════════
+function getVal(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function getStr(id) { return document.getElementById(id)?.value || ''; }
+
+function getProfile() {
+  return {
+    age: getVal('p-age'),
+    citizenship: getStr('p-citizen'),
+    marital: getStr('p-marital'),
+    firstTimer: getStr('p-firsttimer'),
+    deps: getVal('p-deps'),
+    income: getVal('p-income'),
+    bonus: getVal('p-bonus'),
+    cpf: getVal('p-cpf'),
+    cpfRate: getVal('p-cpfrate'),
+    cash: getVal('p-cash'),
+    invest: getVal('p-invest'),
+    loans: getVal('p-loans'),
+    credit: getStr('p-credit'),
+    loanType: getStr('p-loantype'),
+    riskTol: getStr('p-risktol'),
+    expenses: getVal('p-expenses'),
+  };
+}
+
+function profileChanged() {
+  const p = getProfile();
+  const cpfMonthly = p.income * p.cpfRate / 100;
+  const net = p.income - p.loans;
+  const liquid = p.cpf + p.cash;
+  const buffer = p.expenses > 0 ? Math.floor(p.cash / p.expenses) : 0;
+  const maxMSR = p.income * SETTINGS.msrLimit / 100;
+  const maxTDSR = p.income * SETTINGS.tdsrLimit / 100 - p.loans;
+
+  setText('auto-cpf-monthly', fmtDollar(cpfMonthly));
+  setText('auto-net', fmtDollar(net));
+  setText('auto-liquid', fmtDollar(liquid));
+  setText('auto-buffer', buffer + ' mo');
+  setText('auto-msr', fmtDollar(maxMSR));
+  setText('auto-tdsr', fmtDollar(maxTDSR));
+
+  updateSummaryBar();
+  calcBTO();
+  calcResale();
+  calcPrivate();
+  calcCompare();
+  calcDashboard();
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ═══════════════════════════════════════════════
+// BTO CALCULATOR
+// ═══════════════════════════════════════════════
+function calcBTO() {
+  const p = getProfile();
+  const price = getVal('bto-price');
+  const tenure = getVal('bto-tenure') || 25;
+  const rate = getVal('bto-rate') || 2.6;
+  const flatType = getStr('bto-flattype');
+  const estate = getStr('bto-estate');
+  const phg = getStr('bto-phg');
+
+  const ltv = SETTINGS.hdbLTV / 100;
+  const loanAmt = price * ltv;
+  const dp = price - loanAmt;
+  const cpfUsable = Math.min(p.cpf, dp);
+  const cashNeeded = Math.max(0, dp - cpfUsable);
+  const mp = monthlyPayment(loanAmt, rate, tenure);
+  const totalInt = totalInterest(loanAmt, rate, tenure);
+  const msrRatio = p.income > 0 ? (mp / p.income) * 100 : 0;
+  const msrPass = msrRatio <= SETTINGS.msrLimit;
+  const affordInfo = affordClass(msrRatio);
+
+  const grants = calcGrants(p.income, p.citizenship, p.marital, p.firstTimer, flatType, phg, true, estate);
+  const effPrice = price - grants.total;
+  const effLoan = effPrice * ltv;
+  const effMP = monthlyPayment(effLoan, rate, tenure);
+  const effMSR = p.income > 0 ? (effMP / p.income) * 100 : 0;
+
+  // Income ceiling check
+  const ceilingMap = { '2room': 7000, '3room': 7000, '4room': 10000, '5room': 10000, 'ec': 16000 };
+  const ceiling = ceilingMap[flatType] || 10000;
+  const incomeOK = p.income <= ceiling;
+
+  // Output — results
+  document.getElementById('bto-results').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="s-label">Purchase Price</div><div class="s-val">${fmtDollar(price)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Total Grants</div><div class="s-val" style="color:var(--green)">${fmtDollar(grants.total)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Effective Price</div><div class="s-val">${fmtDollar(effPrice)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Loan (${(ltv*100).toFixed(0)}% LTV)</div><div class="s-val">${fmtDollar(effLoan)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Downpayment</div><div class="s-val">${fmtDollar(effPrice - effLoan)}</div>
+        <div class="s-sub">CPF: ${fmtDollar(Math.min(p.cpf, effPrice - effLoan))} | Cash: ${fmtDollar(Math.max(0, (effPrice - effLoan) - p.cpf))}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Monthly Payment</div>
+        <div class="s-val ${affordInfo.cls}">${fmtDollar(effMP)}</div>
+        <div class="s-sub">${affordInfo.label} (${fmtPct(effMSR)} MSR)</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Total Interest</div><div class="s-val">${fmtDollar(totalInterest(effLoan, rate, tenure))}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Cash Remaining</div>
+        <div class="s-val ${(p.cash - cashNeeded) < 20000 ? 'warn' : ''}">${fmtDollar(p.cash - Math.max(0, (effPrice - effLoan) - p.cpf))}</div>
+      </div>
+    </div>
+    <div class="mt1">
+      <div style="font-size:0.68rem;color:var(--text3);font-family:var(--font-mono);margin-bottom:0.3rem">MSR AFFORDABILITY</div>
+      <div class="prog-bar"><div class="prog-fill ${affordInfo.cls || 'accent'}" style="width:${Math.min(effMSR, 100)}%"></div></div>
+      <div class="flex-between text-sm mt1"><span>${fmtPct(effMSR)} of income</span><span>Limit: ${SETTINGS.msrLimit}%</span></div>
+    </div>
+  `;
+
+  // Grants output
+  let grantsHTML = grants.total > 0 ?
+    `<div class="result-box green mt1"><div class="result-label">Total Grants Available</div><div class="result-val">${fmtDollar(grants.total)}</div></div>` : '';
+
+  grants.notes.forEach(n => {
+    grantsHTML += `<div class="warning-banner ${n.includes('Eligible') || n.includes('$') && !n.includes('exceeds') ? 'green' : 'amber'}" style="margin-top:0.4rem">ℹ️ ${n}</div>`;
+  });
+  if (!grants.notes.length) grantsHTML += '<div class="text-sm">No grant info — check citizenship, marital status, first-timer status.</div>';
+
+  document.getElementById('bto-grants-output').innerHTML = grantsHTML;
+
+  // Warnings
+  let warn = '';
+  if (!incomeOK) warn += `<div class="warning-banner red">⛔ Income ${fmtDollar(p.income)} exceeds BTO ceiling of ${fmtDollar(ceiling)} for ${flatType}</div>`;
+  if (p.citizenship !== 'SC') warn += `<div class="warning-banner amber">⚠️ PRs & foreigners have restricted access to HDB flats</div>`;
+  if (!msrPass) warn += `<div class="warning-banner red">⛔ MSR ${fmtPct(msrRatio)} exceeds ${SETTINGS.msrLimit}% limit — reduce price or extend tenure</div>`;
+  if (p.firstTimer === 'no') warn += `<div class="warning-banner amber">⚠️ Non-first-timers have reduced ballot priority and limited grant access</div>`;
+  if (incomeOK && msrPass && p.firstTimer === 'yes') warn += `<div class="warning-banner green">✅ You are eligible! BTO ballot estimated wait: 3–5 years</div>`;
+
+  // MOP & Timeline
+  warn += `
+    <div class="mt1" style="font-size:0.75rem;font-family:var(--font-mono);color:var(--text2)">
+      <div>🔒 Minimum Occupation Period (MOP): <strong>5 years</strong></div>
+      <div style="margin-top:0.3rem">📅 Estimated wait for keys: <strong>3–5 years</strong> from ballot</div>
+    </div>`;
+  document.getElementById('bto-warnings').innerHTML = warn;
+
+  // Progressive payment
+  const stages = [
+    ['Foundation', 5], ['Reinforced Concrete', 10], ['Brick Walls', 5],
+    ['Roofing', 5], ['Windows & Doors', 5], ['Internal Plaster', 5],
+    ['Car Park', 5], ['Completion', 25], ['TOP — Balance Loan', 35],
+  ];
+  let progHTML = `<div class="text-sm mb1">HDB BTO uses a progressive payment scheme — you pay in stages as construction progresses.</div>`;
+  let cumPct = 0;
+  stages.forEach(([stage, pct]) => {
+    cumPct += pct;
+    const amt = price * pct / 100;
+    progHTML += `
+      <div class="flex-between" style="font-size:0.75rem;font-family:var(--font-mono);padding:0.3rem 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">${stage}</span>
+        <span>${pct}% — ${fmtDollar(amt)}</span>
+      </div>`;
+  });
+  document.getElementById('bto-progressive').innerHTML = progHTML;
+
+  updateSummaryBar(effMP, effLoan, fmtPct(effMSR) + ' MSR', affordInfo.label);
+}
+
+function btoSliderUpdate(val) {
+  document.getElementById('bto-slider-val').textContent = '$' + parseInt(val).toLocaleString();
+  document.getElementById('p-income').value = val;
+  profileChanged();
+}
+
+// ═══════════════════════════════════════════════
+// RESALE CALCULATOR
+// ═══════════════════════════════════════════════
+function calcResale() {
+  const p = getProfile();
+  const price = getVal('rs-price');
+  const valuation = getVal('rs-val');
+  const lease = getVal('rs-lease');
+  const flatType = getStr('rs-flattype');
+  const tenure = getVal('rs-tenure') || 25;
+  const rate = getVal('rs-rate') || 2.6;
+  const phg = getStr('rs-phg');
+
+  const cov = price - valuation;
+  const ltv = SETTINGS.hdbLTV / 100;
+  const loanAmt = valuation * ltv;
+  const dp = price - loanAmt;
+  const cpfUsable = Math.min(p.cpf, dp);
+  const cashNeeded = Math.max(0, dp - cpfUsable);
+  const mp = monthlyPayment(loanAmt, rate, tenure);
+  const msrRatio = p.income > 0 ? (mp / p.income) * 100 : 0;
+  const affordInfo = affordClass(msrRatio);
+  const grants = calcGrants(p.income, p.citizenship, p.marital, p.firstTimer, flatType, phg, false, '');
+
+  const effPrice = price - grants.total;
+  const effLoan = valuation * ltv;
+  const effMP = monthlyPayment(effLoan, rate, tenure);
+
+  document.getElementById('rs-results').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="s-label">Purchase Price</div><div class="s-val">${fmtDollar(price)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">HDB Valuation</div><div class="s-val">${fmtDollar(valuation)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">COV (Cash Over Valuation)</div>
+        <div class="s-val ${cov > 0 ? 'bad' : 'good'}">${fmtDollar(cov)}</div>
+        <div class="s-sub">${cov > 0 ? 'Must be paid in cash' : 'Below valuation — good!'}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Max Loan</div><div class="s-val">${fmtDollar(loanAmt)}</div>
+        <div class="s-sub">${(ltv*100).toFixed(0)}% of valuation</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Downpayment</div><div class="s-val">${fmtDollar(dp)}</div>
+        <div class="s-sub">CPF: ${fmtDollar(cpfUsable)} | Cash: ${fmtDollar(cashNeeded)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Monthly Payment</div>
+        <div class="s-val ${affordInfo.cls}">${fmtDollar(mp)}</div>
+        <div class="s-sub">${affordInfo.label} (${fmtPct(msrRatio)} MSR)</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Total Grants</div><div class="s-val" style="color:var(--green)">${fmtDollar(grants.total)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Total Interest</div><div class="s-val">${fmtDollar(totalInterest(loanAmt, rate, tenure))}</div>
+      </div>
+    </div>
+    <div class="mt1 text-sm">⚠️ CPF accrued interest: CPF used for housing accrues 2.5% p.a. interest, refundable upon sale to your CPF OA.</div>
+  `;
+
+  // Lease analysis
+  const buyerAge = p.age;
+  const leaseAtAge99 = 99 - (99 - lease); // remaining
+  const ageWhenLeaseExpires = buyerAge + lease;
+  const cpfWithdrawLease = lease < 20 ? false : lease >= 30;
+  let leaseRisk = 'green'; let leaseLabel = 'Safe';
+  if (lease < 60) { leaseRisk = 'amber'; leaseLabel = 'Watch'; }
+  if (lease < 40 || ageWhenLeaseExpires < 80) { leaseRisk = 'red'; leaseLabel = 'Risky'; }
+
+  document.getElementById('rs-lease-analysis').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="s-label">Remaining Lease</div><div class="s-val">${lease} years</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Your Age at Expiry</div>
+        <div class="s-val ${ageWhenLeaseExpires < 80 ? 'bad' : ''}">${ageWhenLeaseExpires}</div>
+        <div class="s-sub">${ageWhenLeaseExpires < 80 ? '⚠️ Lease expires before 80' : '✅ Covers till 80+'}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">CPF Usage Restriction</div>
+        <div class="s-val">${lease >= 30 ? 'None' : 'Restricted'}</div>
+        <div class="s-sub">${lease < 30 ? 'Lease < 30 yrs — CPF may be restricted' : ''}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Lease Risk</div>
+        <div class="s-val"><span class="badge badge-${leaseRisk}">${leaseLabel}</span></div>
+      </div>
+    </div>
+    <div class="mt1">
+      <div style="font-size:0.68rem;color:var(--text3);font-family:var(--font-mono);margin-bottom:0.3rem">LEASE REMAINING</div>
+      <div class="prog-bar"><div class="prog-fill ${leaseRisk}" style="width:${lease}%"></div></div>
+    </div>
+    ${lease < 60 ? '<div class="warning-banner amber mt1">⚠️ Shorter leases affect resale value significantly. Banks may restrict financing.</div>' : ''}
+    ${lease < 40 ? '<div class="warning-banner red mt1">⛔ Very short lease — CPF withdrawal may be disallowed. Consider carefully.</div>' : ''}
+  `;
+
+  // Grants
+  let gHTML = '';
+  if (grants.total > 0) {
+    gHTML += `<div class="result-box green"><div class="result-label">Total Grants</div><div class="result-val">${fmtDollar(grants.total)}</div><div class="result-sub">Effective Price: ${fmtDollar(effPrice)}</div></div>`;
+  }
+  grants.notes.forEach(n => {
+    gHTML += `<div class="warning-banner ${n.includes('exceeds') ? 'amber' : 'green'} mt1">ℹ️ ${n}</div>`;
+  });
+  if (!gHTML) gHTML = '<div class="text-sm">Check profile — citizenship, marital status & first-timer status affect grants.</div>';
+  document.getElementById('rs-grants').innerHTML = gHTML;
+}
+
+// ═══════════════════════════════════════════════
+// PRIVATE PROPERTY CALCULATOR
+// ═══════════════════════════════════════════════
+let amorView = 'yearly';
+
+function calcPrivate() {
+  const p = getProfile();
+  const price = getVal('pv-price');
+  const tenure = getVal('pv-tenure') || 30;
+  const rate = getVal('pv-rate') || 3.5;
+  const pvType = getStr('pv-type');
+  const existing = parseInt(getStr('pv-existing')) || 0;
+  const citizen = getStr('pv-citizen') || p.citizenship;
+
+  const ltv = SETTINGS.bankLTV / 100;
+  const ltvAdj = existing >= 1 ? 0.45 : ltv; // 2nd property: 45% LTV
+  const loanAmt = price * ltvAdj;
+  const dp = price - loanAmt;
+  const bsd = calcBSD(price);
+  const absd = calcABSD(price, citizen, existing);
+  const legalFees = Math.max(2500, price * 0.004);
+  const agentFees = pvType === 'resale_condo' ? price * 0.01 : 0;
+  const totalUpfront = dp + bsd + absd + legalFees + agentFees;
+
+  const mp = monthlyPayment(loanAmt, rate, tenure);
+  const tdsrRatio = p.income > 0 ? ((mp + p.loans) / p.income) * 100 : 0;
+  const tdsrPass = tdsrRatio <= SETTINGS.tdsrLimit;
+  const affordInfo = affordClass((mp / p.income) * 100);
+  const cashAfter = p.cash + p.cpf - totalUpfront;
+
+  document.getElementById('pv-results').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="s-label">Purchase Price</div><div class="s-val">${fmtDollar(price)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">LTV Ratio</div><div class="s-val">${(ltvAdj*100).toFixed(0)}%</div>
+        <div class="s-sub">${existing >= 1 ? '2nd+ property — reduced LTV' : '1st property'}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Loan Amount</div><div class="s-val">${fmtDollar(loanAmt)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Downpayment</div><div class="s-val">${fmtDollar(dp)}</div>
+        <div class="s-sub">Min 5% cash + rest CPF/cash</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Monthly Mortgage</div>
+        <div class="s-val ${affordInfo.cls}">${fmtDollar(mp)}</div>
+        <div class="s-sub">${affordInfo.label}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">TDSR</div>
+        <div class="s-val ${tdsrPass ? 'good' : 'bad'}">${fmtPct(tdsrRatio)}</div>
+        <div class="s-sub">${tdsrPass ? '✅ Within limit' : '⛔ Exceeds ' + SETTINGS.tdsrLimit + '%'}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Total Upfront Cost</div><div class="s-val">${fmtDollar(totalUpfront)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Remaining Cash+CPF</div>
+        <div class="s-val ${cashAfter < 20000 ? 'bad' : cashAfter < 50000 ? 'warn' : 'good'}">${fmtDollar(cashAfter)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Total Interest</div><div class="s-val">${fmtDollar(totalInterest(loanAmt, rate, tenure))}</div>
+      </div>
+    </div>
+    <div class="mt1">
+      <div class="text-sm">📌 Min 5% cash downpayment required; balance via CPF OA or cash.</div>
+    </div>
+  `;
+
+  // Stamp duties
+  document.getElementById('pv-stamp').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="s-label">Buyer's Stamp Duty (BSD)</div><div class="s-val">${fmtDollar(bsd)}</div>
+        <div class="s-sub">1–6% on tiered price</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">ABSD</div>
+        <div class="s-val ${absd > 0 ? 'bad' : 'good'}">${fmtDollar(absd)}</div>
+        <div class="s-sub">${citizen}, ${existing === 0 ? '1st' : existing === 1 ? '2nd' : '3rd+'} property</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Legal Fees (est.)</div><div class="s-val">${fmtDollar(legalFees)}</div>
+      </div>
+      ${agentFees > 0 ? `<div class="stat-item"><div class="s-label">Agent Fees (1%)</div><div class="s-val">${fmtDollar(agentFees)}</div></div>` : ''}
+      <div class="stat-item">
+        <div class="s-label">Total Duties & Fees</div><div class="s-val" style="color:var(--accent)">${fmtDollar(bsd + absd + legalFees + agentFees)}</div>
+      </div>
+    </div>
+    ${absd > 50000 ? `<div class="warning-banner red mt1">⛔ High ABSD ${fmtDollar(absd)} — consider delaying or reviewing options</div>` : ''}
+    ${absd === 0 ? `<div class="warning-banner green mt1">✅ No ABSD — good news!</div>` : ''}
+  `;
+
+  // Stress test
+  const stressRates = [rate + 1, rate + 2, rate + 3];
+  let stressHTML = `<div class="text-sm mb1" style="font-family:var(--font-mono)">Current: ${fmtDollar(mp)}/mo at ${rate}%</div>`;
+  stressRates.forEach(sr => {
+    const smp = monthlyPayment(loanAmt, sr, tenure);
+    const delta = smp - mp;
+    stressHTML += `
+      <div class="flex-between" style="font-size:0.75rem;font-family:var(--font-mono);padding:0.35rem 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text3)">+${(sr - rate).toFixed(0)}% → ${sr}%</span>
+        <span>${fmtDollar(smp)}</span>
+        <span style="color:var(--red)">+${fmtDollar(delta)}/mo</span>
+      </div>`;
+  });
+  document.getElementById('pv-stress').innerHTML = stressHTML;
+
+  // Update amortization chart & table
+  renderAmortization(loanAmt, rate, tenure);
+  calcRvB();
+  updateSummaryBar(mp, loanAmt, fmtPct(tdsrRatio) + ' TDSR', affordInfo.label);
+}
+
+function renderAmortization(principal, rate, tenure) {
+  const sched = buildAmortization(principal, rate, tenure);
+  const yearly = buildYearlyAmort(sched);
+
+  // Balance chart
+  drawBalanceChart(yearly, principal);
+  drawPIChart(yearly);
+
+  // Table
+  const data = amorView === 'monthly' ? sched.slice(0, 120) : yearly;
+  let rows = '';
+  data.forEach((row, i) => {
+    const pct = ((1 - row.balance / principal) * 100).toFixed(1);
+    const isMilestone = pct >= 50 && ((data[i - 1] && ((1 - data[i - 1].balance / principal) * 100) < 50) || i === 0);
+    rows += `<tr ${isMilestone ? 'style="background:var(--amber-bg)"' : ''}>
+      <td>${amorView === 'monthly' ? 'M' + row.month : 'Y' + row.year} ${isMilestone ? '🏁 50%' : ''}</td>
+      <td>${fmtDollar(row.payment)}</td>
+      <td>${fmtDollar(row.principal)}</td>
+      <td>${fmtDollar(row.interest)}</td>
+      <td>${fmtDollar(row.balance)}</td>
+      <td>
+        <div class="prog-bar" style="height:6px"><div class="prog-fill accent" style="width:${pct}%"></div></div>
+      </td>
+    </tr>`;
+  });
+  document.getElementById('amortTableBody').innerHTML = rows;
+}
+
+function setAmorView(v) { amorView = v; calcPrivate(); }
+
+function drawBalanceChart(yearly, principal) {
+  const canvas = document.getElementById('balanceChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 400, H = 180;
+  canvas.width = W; canvas.height = H;
+  const pad = { t: 10, r: 10, b: 30, l: 50 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+  const style = getComputedStyle(document.body);
+  const textColor = style.getPropertyValue('--text3').trim() || '#999';
+  const accentColor = style.getPropertyValue('--accent').trim() || '#c8553d';
+  const bgColor = style.getPropertyValue('--bg3').trim() || '#eee';
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = bgColor; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + cH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+  }
+
+  // Line
+  ctx.strokeStyle = accentColor; ctx.lineWidth = 2;
+  ctx.beginPath();
+  yearly.forEach((row, i) => {
+    const x = pad.l + (i / (yearly.length - 1)) * cW;
+    const y = pad.t + cH * (1 - row.balance / principal);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill
+  ctx.fillStyle = accentColor + '18';
+  ctx.lineTo(pad.l + cW, pad.t + cH);
+  ctx.lineTo(pad.l, pad.t + cH);
+  ctx.closePath(); ctx.fill();
+
+  // Labels
+  ctx.fillStyle = textColor; ctx.font = '10px DM Mono, monospace'; ctx.textAlign = 'right';
+  ctx.fillText(fmtDollar(principal), pad.l - 4, pad.t + 8);
+  ctx.fillText('$0', pad.l - 4, pad.t + cH);
+  ctx.textAlign = 'center';
+  ctx.fillText('Y1', pad.l, H - 5);
+  ctx.fillText('Y' + yearly.length, pad.l + cW, H - 5);
+}
+
+function drawPIChart(yearly) {
+  const canvas = document.getElementById('piChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 400, H = 180;
+  canvas.width = W; canvas.height = H;
+  const pad = { t: 10, r: 10, b: 30, l: 50 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+  const style = getComputedStyle(document.body);
+  const textColor = style.getPropertyValue('--text3').trim() || '#999';
+  const greenColor = style.getPropertyValue('--green').trim() || '#3a7d44';
+  const accentColor = style.getPropertyValue('--accent').trim() || '#c8553d';
+  const bgColor = style.getPropertyValue('--bg3').trim() || '#eee';
+  const maxP = Math.max(...yearly.map(r => r.principal));
+  const maxI = Math.max(...yearly.map(r => r.interest));
+  const maxY = Math.max(maxP, maxI) * 1.1;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = bgColor; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + cH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+  }
+
+  ['principal', 'interest'].forEach((key, ki) => {
+    ctx.strokeStyle = ki === 0 ? greenColor : accentColor;
+    ctx.lineWidth = 2; ctx.beginPath();
+    yearly.forEach((row, i) => {
+      const x = pad.l + (i / (yearly.length - 1)) * cW;
+      const y = pad.t + cH * (1 - row[key] / maxY);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = textColor; ctx.font = '10px DM Mono, monospace';
+  ctx.fillStyle = greenColor; ctx.fillRect(pad.l, H - 12, 10, 8);
+  ctx.fillStyle = textColor; ctx.fillText('Principal', pad.l + 14, H - 5);
+  ctx.fillStyle = accentColor; ctx.fillRect(pad.l + 80, H - 12, 10, 8);
+  ctx.fillStyle = textColor; ctx.fillText('Interest', pad.l + 94, H - 5);
+}
+
+// ═══════════════════════════════════════════════
+// RENT vs BUY
+// ═══════════════════════════════════════════════
+function calcRvB() {
+  const price = getVal('pv-price');
+  const rent = getVal('rvb-rent');
+  const apprec = getVal('rvb-apprec') / 100;
+  const years = getVal('rvb-years');
+  const rate = getVal('pv-rate');
+  const tenure = getVal('pv-tenure') || 30;
+  const ltv = SETTINGS.bankLTV / 100;
+  const loanAmt = price * ltv;
+  const mp = monthlyPayment(loanAmt, rate, tenure);
+
+  const totalRent = rent * 12 * years;
+  const futureValue = price * Math.pow(1 + apprec, years);
+  const equityBuilt = futureValue - loanAmt * Math.pow(1 + rate / 100 / 12, years * 12) + loanAmt;
+  const totalMortgagePaid = mp * 12 * years;
+  const buyNetGain = futureValue - price - totalMortgagePaid + equityBuilt;
+
+  let rec = 'Neutral';
+  let recClass = '';
+  if (futureValue - price > totalRent) { rec = '🏠 Buy'; recClass = 'green'; }
+  else if (totalRent < totalMortgagePaid * 0.6) { rec = '🏢 Rent'; recClass = 'amber'; }
+
+  document.getElementById('rvb-results').innerHTML = `
+    <div class="mt1 stat-grid">
+      <div class="stat-item">
+        <div class="s-label">Total Rent (${years}y)</div><div class="s-val">${fmtDollar(totalRent)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Property Value in ${years}y</div><div class="s-val">${fmtDollar(futureValue)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Capital Appreciation</div><div class="s-val" style="color:var(--green)">${fmtDollar(futureValue - price)}</div>
+      </div>
+      <div class="stat-item">
+        <div class="s-label">Recommendation</div>
+        <div class="s-val"><span class="badge badge-${recClass || 'gray'}">${rec}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// COMPARE
+// ═══════════════════════════════════════════════
+function calcCompare() {
+  const p = getProfile();
+  const scenarios = [
+    { label: 'BTO/HDB', price: getVal('cmp-bto-price'), tenure: getVal('cmp-bto-tenure') || 25, rate: getVal('cmp-bto-rate') || 2.6, ltv: SETTINGS.hdbLTV / 100, isHDB: true },
+    { label: 'HDB Resale', price: getVal('cmp-rs-price'), tenure: getVal('cmp-rs-tenure') || 25, rate: getVal('cmp-rs-rate') || 2.6, ltv: SETTINGS.hdbLTV / 100, isHDB: true },
+    { label: 'Private', price: getVal('cmp-pv-price'), tenure: getVal('cmp-pv-tenure') || 30, rate: getVal('cmp-pv-rate') || 3.5, ltv: SETTINGS.bankLTV / 100, isHDB: false },
+  ];
+
+  const grants = calcGrants(p.income, p.citizenship, p.marital, p.firstTimer, '4room', 'no', false, '');
+
+  const data = scenarios.map(s => {
+    const loanAmt = s.price * s.ltv;
+    const effPrice = s.isHDB ? s.price - grants.total : s.price;
+    const effLoan = effPrice * s.ltv;
+    const dp = s.isHDB ? effPrice - effLoan : s.price - loanAmt;
+    const mp = monthlyPayment(effLoan, s.rate, s.tenure);
+    const tdsrRatio = p.income > 0 ? ((mp + p.loans) / p.income) * 100 : 0;
+    const cashNeeded = Math.max(0, dp - p.cpf);
+    const bsd = s.isHDB ? 0 : calcBSD(s.price);
+    const absd = s.isHDB ? 0 : calcABSD(s.price, p.citizenship, 0);
+    const afford = affordClass(mp / p.income * 100);
+    return { ...s, mp, loanAmt: effLoan, dp, cashNeeded, tdsrRatio, grants: s.isHDB ? grants.total : 0, totalInt: totalInterest(effLoan, s.rate, s.tenure), bsd, absd, afford };
+  });
+
+  const metrics = [
+    ['Purchase Price', d => fmtDollar(d.price)],
+    ['Effective Price (after grants)', d => fmtDollar(d.price - d.grants), true],
+    ['Grants Available', d => fmtDollar(d.grants), true],
+    ['Downpayment', d => fmtDollar(d.dp)],
+    ['Loan Amount', d => fmtDollar(d.loanAmt)],
+    ['Monthly Mortgage', d => fmtDollar(d.mp), false, true],
+    ['Total Interest', d => fmtDollar(d.totalInt)],
+    ['TDSR Ratio', d => fmtPct(d.tdsrRatio), false, false, true],
+    ['BSD + ABSD', d => fmtDollar(d.bsd + d.absd)],
+    ['Cash Needed', d => fmtDollar(d.cashNeeded)],
+    ['Affordability', d => `<span class="badge badge-${d.afford.cls || 'gray'}">${d.afford.label}</span>`],
+  ];
+
+  let rows = '';
+  metrics.forEach(([label, fn, bigIsBetter, smallIsBetter, smallPctBetter]) => {
+    const vals = data.map(d => fn(d));
+    const nums = data.map(d => {
+      const v = fn(d);
+      return parseFloat(v.replace(/[^0-9.-]/g, '')) || 0;
+    });
+    const best = smallIsBetter || smallPctBetter ? Math.min(...nums.filter(n => n > 0)) : (bigIsBetter ? Math.max(...nums) : Math.min(...nums));
+    rows += `<tr><td>${label}</td>`;
+    data.forEach((d, i) => {
+      const val = vals[i];
+      const num = nums[i];
+      const isBest = Math.abs(num - best) < 0.01 && num > 0;
+      rows += `<td class="${isBest ? 'best' : ''}">${val}</td>`;
+    });
+    rows += `</tr>`;
+  });
+  document.getElementById('compareBody').innerHTML = rows;
+
+  // Recommendation
+  const scores = data.map(d => {
+    let s = 0;
+    if (d.afford.cls === 'green') s += 30;
+    else if (!d.afford.cls) s += 20;
+    else if (d.afford.cls === 'amber') s += 10;
+    if (d.tdsrRatio <= SETTINGS.tdsrLimit) s += 20;
+    if (d.grants > 50000) s += 20;
+    if (d.cashNeeded < p.cash * 0.5) s += 15;
+    if (d.bsd + d.absd < 30000) s += 15;
+    return s;
+  });
+  const best = scores.indexOf(Math.max(...scores));
+  const recLabels = ['🏗️ BTO/HDB', '🏠 HDB Resale', '🏙️ Private Condo'];
+  document.getElementById('compareRec').innerHTML = `
+    <div class="result-box green">
+      <div class="result-label">Recommended Option (Based on Your Profile)</div>
+      <div class="result-val">${recLabels[best]}</div>
+      <div class="result-sub">Score: ${scores[best]}/100 — based on affordability, grants, and cash position</div>
+    </div>
+    <div class="flex-between mt1" style="gap:0.5rem;flex-wrap:wrap">
+      ${data.map((d, i) => `<div class="stat-item" style="flex:1;min-width:120px"><div class="s-label">${d.label} Score</div><div class="s-val">${scores[i]}/100</div></div>`).join('')}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function calcDashboard() {
+  const p = getProfile();
+  const price = getVal('pv-price') || getVal('bto-price') || 500000;
+  const loanAmt = price * SETTINGS.bankLTV / 100;
+  const rate = getVal('pv-rate') || 3.5;
+  const tenure = getVal('pv-tenure') || 30;
+  const mp = monthlyPayment(loanAmt, rate, tenure);
+  const tdsrRatio = p.income > 0 ? ((mp + p.loans) / p.income) * 100 : 0;
+  const bsd = calcBSD(price);
+  const absd = calcABSD(price, p.citizenship, 0);
+  const dp = price - loanAmt;
+  const cashAfter = p.cash - Math.max(0, dp * 0.05) - bsd - absd;
+  const netWorth = p.cpf + p.cash + p.invest + price - loanAmt;
+  const stressRatio = tdsrRatio;
+  const bufferMonths = p.expenses > 0 ? Math.floor(Math.max(cashAfter, 0) / p.expenses) : 0;
+
+  // Risk score (0–100, 0=low risk)
+  let riskScore = 20;
+  if (tdsrRatio > 55) riskScore += 25;
+  else if (tdsrRatio > 45) riskScore += 15;
+  else if (tdsrRatio > 35) riskScore += 8;
+  if (cashAfter < 10000) riskScore += 20;
+  else if (cashAfter < 30000) riskScore += 10;
+  if (bufferMonths < 3) riskScore += 15;
+  else if (bufferMonths < 6) riskScore += 8;
+  if (p.credit === 'poor') riskScore += 10;
+  else if (p.credit === 'avg') riskScore += 5;
+  riskScore = Math.min(100, riskScore);
+
+  let riskClass = riskScore < 35 ? 'good' : riskScore < 65 ? 'warn' : 'bad';
+  setText('db-networth', fmtDollar(netWorth));
+  setText('db-cash', fmtDollar(cashAfter));
+  setText('db-stress', fmtPct(stressRatio));
+  setText('db-riskscore', riskScore + '/100');
+  setText('db-riskscore2', riskScore);
+
+  document.getElementById('db-riskbadge').innerHTML = `<span class="badge badge-${riskClass === 'good' ? 'green' : riskClass === 'warn' ? 'amber' : 'red'}">${riskScore < 35 ? 'LOW' : riskScore < 65 ? 'MODERATE' : 'HIGH'}</span>`;
+
+  const needle = document.getElementById('gaugeNeedle');
+  if (needle) needle.style.left = riskScore + '%';
+
+  // Risk flags
+  let flags = '';
+  if (cashAfter < 20000) flags += `<div class="warning-banner red">🚨 Cash-poor risk: Only ${fmtDollar(cashAfter)} remaining after purchase</div>`;
+  if (tdsrRatio > 55) flags += `<div class="warning-banner red">🚨 Over-leveraged: TDSR ${fmtPct(tdsrRatio)} exceeds 55% limit</div>`;
+  if (bufferMonths < 6) flags += `<div class="warning-banner amber">⚠️ Low emergency buffer: ${bufferMonths} months of expenses covered</div>`;
+  const grants = calcGrants(p.income, p.citizenship, p.marital, p.firstTimer, '4room', 'no', false, '');
+  if (grants.total > 0 && (dp * 0.8) < grants.total) flags += `<div class="warning-banner amber">⚠️ Grant-dependent affordability: Over 80% of downpayment comes from grants</div>`;
+  if (!flags) flags = `<div class="warning-banner green">✅ Your financial profile looks healthy for this purchase</div>`;
+  document.getElementById('db-riskflags').innerHTML = flags;
+
+  // Insights
+  generateInsights(p, mp, tdsrRatio, cashAfter, riskScore, bufferMonths, grants);
+  calcUpgrade();
+}
+
+function generateInsights(p, mp, tdsr, cashAfter, riskScore, bufferMonths, grants) {
+  const insights = [];
+  const income = p.income;
+  const price = getVal('pv-price') || 500000;
+  const bsd = calcBSD(price);
+  const absd = calcABSD(price, p.citizenship, 0);
+
+  if (absd > 50000) insights.push({ icon: '🚨', title: 'High ABSD Alert', text: `You're facing ${fmtDollar(absd)} in ABSD. Consider whether this purchase is necessary now, or if delaying allows you to restructure.` });
+  if (cashAfter < 20000) insights.push({ icon: '💸', title: 'Cash-Poor Risk', text: `After purchase, only ${fmtDollar(cashAfter)} cash remains. One medical bill or job disruption could destabilize you. Bolster emergency fund first lah.` });
+  if (bufferMonths < 6) insights.push({ icon: '⏱️', title: 'Thin Emergency Buffer', text: `${bufferMonths} months of expenses only. Aim for at least 6 months before committing to a mortgage.` });
+  if (grants.total > 30000) insights.push({ icon: '🎉', title: 'Substantial Grants Available', text: `You qualify for ${fmtDollar(grants.total)} in HDB grants! This can significantly reduce your effective purchase price.` });
+  if (tdsr > 45) insights.push({ icon: '📊', title: 'High Debt Servicing Ratio', text: `TDSR at ${fmtPct(tdsr)} is elevated. You may face rejection from banks. Consider a longer tenure, smaller loan, or increase income first.` });
+  if (income < 5000 && price > 600000) insights.push({ icon: '⚖️', title: 'Affordability Mismatch', text: `Your income-to-price ratio looks stretched. BTO gives the strongest affordability advantage for your income level.` });
+  if (p.firstTimer === 'yes' && p.citizenship === 'SC') insights.push({ icon: '✅', title: 'First-Timer Advantage', text: 'As a first-timer SC, you get priority ballot, enhanced grants, and the best deal the system can offer. Use it wisely!', });
+  if (p.age > 50) insights.push({ icon: '⏳', title: 'Loan Tenure Limited', text: 'At your age, max loan tenure may be restricted. Shorter tenure = higher monthly payments. Plan accordingly.', });
+  insights.push({ icon: '📈', title: 'Interest Rate Sensitivity', text: `A 1% rate hike adds ~${fmtDollar(monthlyPayment(price * 0.75, getVal('pv-rate') + 1, 30) - mp)}/mo. Build buffer for floating rate risk.` });
+
+  const html = insights.slice(0, 6).map(ins => `
+    <div class="insight">
+      <div class="insight-icon">${ins.icon}</div>
+      <div class="insight-text"><strong>${ins.title}</strong>${ins.text}</div>
+    </div>
+  `).join('');
+  document.getElementById('insights-output').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// UPGRADE PATH SIMULATOR
+// ═══════════════════════════════════════════════
+function calcUpgrade() {
+  const salePrice = getVal('up-saleprice');
+  const remainLoan = getVal('up-loan');
+  const cpfUsed = getVal('up-cpfused');
+  const cpfYrs = getVal('up-cpfyrs');
+  const origPrice = getVal('up-price');
+
+  const cpfAccruedInt = cpfUsed * (Math.pow(1.025, cpfYrs) - 1);
+  const cpfRefund = cpfUsed + cpfAccruedInt;
+  const agentFee = salePrice * 0.02;
+  const netProceeds = salePrice - remainLoan - cpfRefund - agentFee;
+  const cashProceeds = netProceeds;
+  const gain = salePrice - origPrice;
+
+  document.getElementById('upgrade-results').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-item"><div class="s-label">Expected Sale Price</div><div class="s-val">${fmtDollar(salePrice)}</div></div>
+      <div class="stat-item"><div class="s-label">Remaining Loan</div><div class="s-val">${fmtDollar(remainLoan)}</div></div>
+      <div class="stat-item"><div class="s-label">CPF Refund (incl. accrued interest)</div><div class="s-val">${fmtDollar(cpfRefund)}</div><div class="s-sub">${fmtDollar(cpfAccruedInt)} accrued interest</div></div>
+      <div class="stat-item"><div class="s-label">Agent Fees (est. 2%)</div><div class="s-val">${fmtDollar(agentFee)}</div></div>
+      <div class="stat-item"><div class="s-label">Net Cash Proceeds</div><div class="s-val ${cashProceeds < 0 ? 'bad' : 'good'}">${fmtDollar(cashProceeds)}</div></div>
+      <div class="stat-item"><div class="s-label">Capital Gain</div><div class="s-val ${gain >= 0 ? 'good' : 'bad'}">${fmtDollar(gain)}</div></div>
+    </div>
+    <div class="mt1 text-sm">💡 After MOP (5 years), net cash proceeds + CPF OA refunded to CPF can be used for your next property upgrade.</div>
+    ${cashProceeds < 100000 ? `<div class="warning-banner amber mt1">⚠️ Limited upgrade cash — consider longer MOP hold for more appreciation.</div>` : ''}
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// SUMMARY BAR
+// ═══════════════════════════════════════════════
+function updateSummaryBar(mp, loan, tdsrStr, affordLabel) {
+  const p = getProfile();
+  setText('sum-income', fmtDollar(p.income));
+  if (loan !== undefined) setText('sum-loan', fmtDollar(loan));
+  if (mp !== undefined) {
+    const el = document.getElementById('sum-mortgage');
+    if (el) { el.textContent = fmtDollar(mp); el.className = 'sum-val ' + (affordClass(mp / p.income * 100).cls || ''); }
+  }
+  if (tdsrStr !== undefined) setText('sum-tdsr', tdsrStr);
+  if (affordLabel !== undefined) {
+    const el = document.getElementById('sum-afford');
+    if (el) { el.textContent = affordLabel; el.className = 'sum-val ' + (affordClass(mp / p.income * 100).cls || ''); }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+function updateSettings() {
+  SETTINGS.hdbLoanRate = getVal('set-hdbrate') || 2.6;
+  SETTINGS.msrLimit = getVal('set-msr') || 30;
+  SETTINGS.tdsrLimit = getVal('set-tdsr') || 55;
+  SETTINGS.bsd1Threshold = getVal('set-bsd1') || 180000;
+  SETTINGS.bankLTV = getVal('set-ltv') || 75;
+  SETTINGS.hdbLTV = getVal('set-hdbltv') || 80;
+  profileChanged();
+}
+
+// ═══════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id)?.classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  const idx = ['profile','bto','resale','private','compare','dashboard'].indexOf(id);
+  if (btns[idx]) btns[idx].classList.add('active');
+
+  // Lazy render charts when switching to private
+  if (id === 'private') setTimeout(calcPrivate, 50);
+  if (id === 'dashboard') setTimeout(calcDashboard, 50);
+  if (id === 'compare') setTimeout(calcCompare, 50);
+}
+
+function setRadio(groupId, inputId, el) {
+  document.querySelectorAll(`#${groupId} .radio-btn`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(inputId).value = el.dataset.val;
+  profileChanged();
+}
+
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const btn = document.getElementById('darkBtn');
+  btn.textContent = document.body.classList.contains('dark') ? '☀️ Light' : '🌙 Dark';
+  setTimeout(() => { calcPrivate(); }, 100);
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / RESET
+// ═══════════════════════════════════════════════
+function saveScenario() {
+  const inputs = {};
+  document.querySelectorAll('input,select').forEach(el => {
+    if (el.id) inputs[el.id] = el.value;
+  });
+  localStorage.setItem('propsmartpro_v1', JSON.stringify(inputs));
+  showToast('Scenario saved!');
+}
+
+function loadScenario() {
+  const saved = localStorage.getItem('propsmartpro_v1');
+  if (!saved) { showToast('No saved scenario found.'); return; }
+  const inputs = JSON.parse(saved);
+  Object.entries(inputs).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  profileChanged();
+  showToast('Scenario loaded!');
+}
+
+function resetAll() {
+  if (!confirm('Reset all inputs to defaults?')) return;
+  document.getElementById('p-age').value = 30;
+  document.getElementById('p-income').value = 6000;
+  document.getElementById('p-cpf').value = 80000;
+  document.getElementById('p-cash').value = 30000;
+  document.getElementById('p-expenses').value = 2000;
+  document.getElementById('p-loans').value = 0;
+  document.getElementById('bto-price').value = 450000;
+  document.getElementById('rs-price').value = 550000;
+  document.getElementById('pv-price').value = 1200000;
+  profileChanged();
+  showToast('Reset to defaults!');
+}
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:var(--bg);padding:0.6rem 1rem;border-radius:8px;font-family:var(--font-mono);font-size:0.78rem;z-index:9999;transition:opacity 0.3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = 1;
+  setTimeout(() => t.style.opacity = 0, 2500);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('load', () => {
+  profileChanged();
+  setTimeout(calcPrivate, 100);
+});
+
+window.addEventListener('resize', () => {
+  const activeTab = document.querySelector('.tab-content.active');
+  if (activeTab && activeTab.id === 'tab-private') calcPrivate();
+});
+</script>
+</body>
+</html>
